@@ -1,9 +1,9 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Stage, Layer, Line, Rect, Circle, Group, Image as KonvaImage } from 'react-konva'
 import type Konva from 'konva'
-import type { Tool, CakeShape, LineData } from '@/types/cake'
+import type { Tool, CakeShape, LineData, FillSnapshot } from '@/types/cake'
 
 interface Props {
   stageRef: React.RefObject<Konva.Stage | null>
@@ -12,6 +12,11 @@ interface Props {
   size: number
   cakeShape: CakeShape
   baseColor: string
+  lines: LineData[]
+  snapshots: FillSnapshot[]
+  onLinesChange: React.Dispatch<React.SetStateAction<LineData[]>>
+  onSnapshotsChange: React.Dispatch<React.SetStateAction<FillSnapshot[]>>
+  onBeforeAction: () => void
   onUpdate?: () => void
 }
 
@@ -40,18 +45,29 @@ function getClipFunc(shape: CakeShape) {
   }
 }
 
-interface FillSnapshot {
-  id: string
-  imageEl: HTMLImageElement
-}
-
-export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, baseColor, onUpdate }: Props) {
-  const [lines, setLines] = useState<LineData[]>([])
-  const [snapshots, setSnapshots] = useState<FillSnapshot[]>([])
+export default function TopFaceCanvas({
+  stageRef,
+  tool,
+  color,
+  size,
+  cakeShape,
+  baseColor,
+  lines,
+  snapshots,
+  onLinesChange,
+  onSnapshotsChange,
+  onBeforeAction,
+  onUpdate,
+}: Props) {
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
   const currentId = useRef<string | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
+  const onBeforeActionRef = useRef(onBeforeAction)
+
+  useEffect(() => {
+    onBeforeActionRef.current = onBeforeAction
+  }, [onBeforeAction])
 
   const notifyUpdate = useCallback(() => {
     setTimeout(() => onUpdate?.(), 50)
@@ -82,6 +98,8 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
 
       const [fr, fg, fb] = hexToRgb(color)
       if (targetR === fr && targetG === fg && targetB === fb && targetA === 255) return
+
+      onBeforeActionRef.current()
 
       const visited = new Uint8Array(w * h)
       const queue: number[] = [px + py * w]
@@ -141,12 +159,12 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
       const dataUrl = fillCanvas.toDataURL()
       const img = new window.Image()
       img.onload = () => {
-        setSnapshots((prev) => [...prev, { id: `snapshot-${Date.now()}`, imageEl: img }])
+        onSnapshotsChange((prev) => [...prev, { id: `snapshot-${Date.now()}`, imageEl: img }])
         notifyUpdate()
       }
       img.src = dataUrl
     },
-    [color, stageRef, notifyUpdate]
+    [color, stageRef, notifyUpdate, onSnapshotsChange]
   )
 
   const handleMouseDown = useCallback(
@@ -159,12 +177,13 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
         return
       }
 
+      onBeforeActionRef.current()
       isDrawing.current = true
       startPos.current = { x: pos.x, y: pos.y }
       const id = `line-${Date.now()}`
       currentId.current = id
 
-      setLines((prev) => [
+      onLinesChange((prev) => [
         ...prev,
         {
           id,
@@ -175,7 +194,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
         },
       ])
     },
-    [tool, color, size, floodFill]
+    [tool, color, size, floodFill, onLinesChange]
   )
 
   const handleMouseMove = useCallback(
@@ -188,7 +207,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
 
       if (!isDrawing.current || !currentId.current) return
       if (e.evt.shiftKey && startPos.current) {
-        setLines((prev) =>
+        onLinesChange((prev) =>
           prev.map((l) =>
             l.id === currentId.current
               ? { ...l, points: [startPos.current!.x, startPos.current!.y, pos.x, pos.y] }
@@ -196,7 +215,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
           )
         )
       } else {
-        setLines((prev) =>
+        onLinesChange((prev) =>
           prev.map((l) =>
             l.id === currentId.current
               ? { ...l, points: [...l.points, pos.x, pos.y] }
@@ -205,7 +224,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
         )
       }
     },
-    []
+    [onLinesChange]
   )
 
   const handleMouseLeave = useCallback(() => {

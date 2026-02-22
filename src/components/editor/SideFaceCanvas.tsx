@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { Stage, Layer, Line, Rect } from 'react-konva'
 import type Konva from 'konva'
 import type { Tool, CakeShape, LineData } from '@/types/cake'
@@ -12,6 +12,9 @@ interface Props {
   size: number
   cakeShape: CakeShape
   baseColor: string
+  lines: LineData[]
+  onLinesChange: React.Dispatch<React.SetStateAction<LineData[]>>
+  onBeforeAction: () => void
   onUpdate?: () => void
 }
 
@@ -24,12 +27,27 @@ function getSideWidth(shape: CakeShape) {
   return Math.min(RADIUS * 2 * 4, 600)
 }
 
-export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape, baseColor, onUpdate }: Props) {
-  const [lines, setLines] = useState<LineData[]>([])
+export default function SideFaceCanvas({
+  stageRef,
+  tool,
+  color,
+  size,
+  cakeShape,
+  baseColor,
+  lines,
+  onLinesChange,
+  onBeforeAction,
+  onUpdate,
+}: Props) {
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
   const currentId = useRef<string | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
+  const onBeforeActionRef = useRef(onBeforeAction)
+
+  useEffect(() => {
+    onBeforeActionRef.current = onBeforeAction
+  }, [onBeforeAction])
 
   const CANVAS_W = getSideWidth(cakeShape)
 
@@ -42,12 +60,13 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
       const pos = e.target.getStage()?.getPointerPosition()
       if (!pos) return
 
+      onBeforeActionRef.current()
       isDrawing.current = true
       startPos.current = { x: pos.x, y: pos.y }
       const id = `line-${Date.now()}`
       currentId.current = id
 
-      setLines((prev) => [
+      onLinesChange((prev) => [
         ...prev,
         {
           id,
@@ -58,7 +77,7 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
         },
       ])
     },
-    [tool, color, size]
+    [tool, color, size, onLinesChange]
   )
 
   const handleMouseMove = useCallback(
@@ -70,7 +89,7 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
 
       if (!isDrawing.current || !currentId.current) return
       if (e.evt.shiftKey && startPos.current) {
-        setLines((prev) =>
+        onLinesChange((prev) =>
           prev.map((l) =>
             l.id === currentId.current
               ? { ...l, points: [startPos.current!.x, startPos.current!.y, pos.x, pos.y] }
@@ -78,7 +97,7 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
           )
         )
       } else {
-        setLines((prev) =>
+        onLinesChange((prev) =>
           prev.map((l) =>
             l.id === currentId.current
               ? { ...l, points: [...l.points, pos.x, pos.y] }
@@ -87,7 +106,7 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
         )
       }
     },
-    []
+    [onLinesChange]
   )
 
   const handleMouseUp = useCallback(() => {

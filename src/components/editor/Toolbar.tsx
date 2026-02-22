@@ -5,6 +5,7 @@ import BrushIcon from '@mui/icons-material/Brush'
 import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal'
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill'
 import FormatPaintIcon from '@mui/icons-material/FormatPaint'
+import UndoIcon from '@mui/icons-material/Undo'
 import type { Tool } from '@/types/cake'
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
   onSizeChange: (size: number) => void
   baseColor: string
   onBaseColorChange: (color: string) => void
+  onUndo?: () => void
+  canUndo?: boolean
 }
 
 const PRESET_COLORS = [
@@ -31,7 +34,7 @@ const TOOLS: { value: Tool; icon: React.ReactNode; title: string }[] = [
   { value: 'fill', icon: <FormatColorFillIcon fontSize="small" />, title: '채우기' },
 ]
 
-export default function Toolbar({ value, onChange, color, onColorChange, size, onSizeChange, baseColor, onBaseColorChange }: Props) {
+export default function Toolbar({ value, onChange, color, onColorChange, size, onSizeChange, baseColor, onBaseColorChange, onUndo, canUndo }: Props) {
   const [popupOpen, setPopupOpen] = useState(false)
   const [baseColorPopupOpen, setBaseColorPopupOpen] = useState(false)
   const popupRef = useRef<HTMLDivElement>(null)
@@ -119,6 +122,21 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
           className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
           style={{ backgroundColor: baseColor }}
         />
+      </button>
+
+      {/* 구분선 + Undo */}
+      <div className="my-2 border-t border-gray-200" />
+      <button
+        title="실행 취소 (Undo)"
+        onClick={onUndo}
+        disabled={!canUndo}
+        className={`flex items-center justify-center w-10 h-10 rounded-xl border transition-colors ${
+          canUndo
+            ? 'border-transparent bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+            : 'border-transparent bg-white text-gray-300 cursor-not-allowed'
+        }`}
+      >
+        <UndoIcon fontSize="small" />
       </button>
 
       {/* 바탕색 팝업 */}

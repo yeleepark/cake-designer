@@ -16,3 +16,8 @@ export interface LineData {
   strokeWidth: number
   globalCompositeOperation: 'source-over' | 'destination-out'
 }
+
+export interface FillSnapshot {
+  id: string
+  imageEl: HTMLImageElement
+}

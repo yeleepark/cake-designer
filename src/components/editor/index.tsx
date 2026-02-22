@@ -7,7 +7,7 @@ import { useDrawing } from '@/hooks/useDrawing'
 import { useExport } from '@/hooks/useExport'
 import Toolbar from './Toolbar'
 import CakeShapeSelector from './CakeShapeSelector'
-import DrawingPanel from './DrawingPanel'
+import DrawingPanel, { type DrawingPanelHandle } from './DrawingPanel'
 
 const CakePreview3D = dynamic(() => import('@/components/preview/CakePreview3D'), {
   ssr: false,
@@ -24,6 +24,8 @@ export default function Editor() {
   const threeCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const { exportToPNG } = useExport(topRef, sideRef, threeCanvasRef)
   const [updateTick, setUpdateTick] = useState(0)
+  const drawingPanelRef = useRef<DrawingPanelHandle>(null)
+  const [canUndo, setCanUndo] = useState(false)
 
   const handleUpdate = useCallback(() => {
     setUpdateTick((t) => t + 1)
@@ -68,12 +70,15 @@ export default function Editor() {
                 onSizeChange={setSize}
                 baseColor={baseColor}
                 onBaseColorChange={setBaseColor}
+                onUndo={() => drawingPanelRef.current?.undo()}
+                canUndo={canUndo}
               />
             </div>
 
             {/* Drawing canvases */}
             <div className="flex-1 p-4 overflow-y-auto">
               <DrawingPanel
+                ref={drawingPanelRef}
                 tool={tool}
                 color={color}
                 size={size}
@@ -81,6 +86,7 @@ export default function Editor() {
                 baseColor={baseColor}
                 topRef={topRef}
                 sideRef={sideRef}
+                onUndoChange={setCanUndo}
                 onUpdate={handleUpdate}
               />
             </div>
