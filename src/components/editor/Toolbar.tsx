@@ -19,10 +19,10 @@ interface Props {
 }
 
 const PRESET_COLORS = [
-  '#000000', '#ffffff', '#ef4444', '#f97316', '#eab308',
-  '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4',
-  '#a16207', '#7c3aed', '#0f766e', '#be185d', '#fbbf24',
-  '#f9a8d4', '#a7f3d0', '#bfdbfe', '#ddd6fe', '#fde68a',
+  '#F8C8DC', '#FFAEBE', '#EDACB1', '#FFF3E8', '#C97A8D',
+  '#FF6B81', '#FF9AA2', '#FFD3B6', '#FFF5F0', '#C44569',
+  '#A3B18A', '#588157', '#DAD7CD', '#FFF1E6', '#6B705C',
+  '#A0C4FF', '#BDB2FF', '#FFC6FF', '#FDFFB6', '#6C63FF',
 ]
 
 const TOOLS: { value: Tool; icon: React.ReactNode; title: string }[] = [

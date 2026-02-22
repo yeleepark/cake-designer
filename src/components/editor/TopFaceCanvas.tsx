@@ -94,6 +94,8 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
         Math.abs(data[i + 2] - targetB) <= TOLERANCE &&
         Math.abs(data[i + 3] - targetA) <= TOLERANCE
 
+      const filledPixels = new Uint8Array(w * h)
+
       while (queue.length) {
         const pos = queue.pop()!
         const x = pos % w
@@ -103,6 +105,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
         data[i + 1] = fg
         data[i + 2] = fb
         data[i + 3] = 255
+        filledPixels[pos] = 1
 
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = x + dx
@@ -117,9 +120,25 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
         }
       }
 
-      ctx.putImageData(imgData, 0, 0)
+      // 칠해진 픽셀만 저장 (나머지 투명) — 바탕색 변경 시 뒤 rect가 정확히 보이도록
+      const fillCanvas = document.createElement('canvas')
+      fillCanvas.width = w
+      fillCanvas.height = h
+      const fillCtx = fillCanvas.getContext('2d')!
+      const fillImageData = fillCtx.createImageData(w, h)
+      const fd = fillImageData.data
+      for (let pos = 0; pos < w * h; pos++) {
+        if (filledPixels[pos]) {
+          const si = pos * 4
+          fd[si] = fr
+          fd[si + 1] = fg
+          fd[si + 2] = fb
+          fd[si + 3] = 255
+        }
+      }
+      fillCtx.putImageData(fillImageData, 0, 0)
 
-      const dataUrl = canvas.toDataURL()
+      const dataUrl = fillCanvas.toDataURL()
       const img = new window.Image()
       img.onload = () => {
         setSnapshots((prev) => [...prev, { id: `snapshot-${Date.now()}`, imageEl: img }])
@@ -217,12 +236,17 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
           onMouseLeave={handleMouseLeave}
           style={{ cursor: tool === 'fill' ? 'crosshair' : 'none' }}
         >
-          <Layer>
+          {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
+          <Layer listening={false}>
             <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="#fdf4ff" />
-
             <Group clipFunc={clipFunc as never}>
               <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill={baseColor} />
+            </Group>
+          </Layer>
 
+          {/* 레이어 2: 그림 — 지우개는 이 레이어만 지움 */}
+          <Layer>
+            <Group clipFunc={clipFunc as never}>
               {snapshots.map((s) => (
                 <KonvaImage
                   key={s.id}

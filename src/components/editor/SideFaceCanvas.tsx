@@ -116,9 +116,13 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
           onMouseLeave={handleMouseLeave}
           style={{ cursor: 'none' }}
         >
-          <Layer>
+          {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
+          <Layer listening={false}>
             <Rect x={0} y={0} width={CANVAS_W} height={CAKE_HEIGHT} fill={baseColor} />
+          </Layer>
 
+          {/* 레이어 2: 그림 — 지우개는 이 레이어만 지움 */}
+          <Layer>
             {lines.map((line) => (
               <Line
                 key={line.id}
@@ -131,7 +135,6 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
                 globalCompositeOperation={line.globalCompositeOperation}
               />
             ))}
-
           </Layer>
         </Stage>
         {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 (texture 캡처에서 제외) */}
