@@ -92,7 +92,7 @@ export default function Toolbar({
 
   // 팝업 위치: 세로 모드는 오른쪽, 가로(모바일) 모드는 위쪽
   const popupPositionClass = horizontal
-    ? 'absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-72'
+    ? 'fixed bottom-[4.5rem] left-1/2 -translate-x-1/2 z-[200] bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-72'
     : 'absolute left-full top-0 ml-2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-56'
 
   const btnClass = (active: boolean) =>

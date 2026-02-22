@@ -28,6 +28,22 @@ export default function Editor() {
   const [canUndo, setCanUndo] = useState(false)
   const [mobileTab, setMobileTab] = useState<'design' | 'cake'>('design')
   const [cakeTabVisited, setCakeTabVisited] = useState(false)
+  const mobileContainerRef = useRef<HTMLDivElement>(null)
+  const [mobileScale, setMobileScale] = useState(1)
+
+  useEffect(() => {
+    const el = mobileContainerRef.current
+    if (!el) return
+    const update = () => {
+      // 사이드 캔버스 최대 폭 600px 기준, 패딩(32px) 제외
+      const scale = Math.min(1, (el.clientWidth - 32) / 600)
+      setMobileScale(scale)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const handleMobileTab = useCallback((tab: 'design' | 'cake') => {
     setMobileTab(tab)
