@@ -19,6 +19,8 @@ interface Props {
   onBaseColorChange: (color: string) => void
   onUndo?: () => void
   canUndo?: boolean
+  /** 모바일 하단 바에서 사용할 가로 배치 모드 */
+  horizontal?: boolean
 }
 
 const PRESET_COLORS = [
@@ -34,7 +36,19 @@ const TOOLS: { value: Tool; icon: React.ReactNode; title: string }[] = [
   { value: 'fill', icon: <FormatColorFillIcon fontSize="small" />, title: '채우기' },
 ]
 
-export default function Toolbar({ value, onChange, color, onColorChange, size, onSizeChange, baseColor, onBaseColorChange, onUndo, canUndo }: Props) {
+export default function Toolbar({
+  value,
+  onChange,
+  color,
+  onColorChange,
+  size,
+  onSizeChange,
+  baseColor,
+  onBaseColorChange,
+  onUndo,
+  canUndo,
+  horizontal = false,
+}: Props) {
   const [popupOpen, setPopupOpen] = useState(false)
   const [baseColorPopupOpen, setBaseColorPopupOpen] = useState(false)
   const popupRef = useRef<HTMLDivElement>(null)
@@ -43,7 +57,7 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
   const baseColorPopupRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: MouseEvent | TouchEvent) => {
       if (
         popupRef.current && !popupRef.current.contains(e.target as Node) &&
         anchorRef.current && !anchorRef.current.contains(e.target as Node)
@@ -58,7 +72,11 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
       }
     }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
   }, [])
 
   const handleToolClick = (tool: Tool) => {
@@ -72,9 +90,24 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
 
   const showPopup = popupOpen && (value === 'brush' || value === 'eraser')
 
+  // 팝업 위치: 세로 모드는 오른쪽, 가로(모바일) 모드는 위쪽
+  const popupPositionClass = horizontal
+    ? 'absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-72'
+    : 'absolute left-full top-0 ml-2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-56'
+
+  const btnClass = (active: boolean) =>
+    `relative flex items-center justify-center rounded-xl border transition-colors ${
+      horizontal ? 'w-12 h-12' : 'w-10 h-10'
+    } ${
+      active
+        ? 'border-violet-500 bg-violet-100 text-violet-700'
+        : 'border-transparent bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+    }`
+
   return (
-    <div className="relative flex flex-col gap-1">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">도구</p>
+    <div className={`relative ${horizontal ? 'flex flex-row items-center gap-1' : 'flex flex-col gap-1'}`}>
+      {/* 라벨: 세로 모드에서만 */}
+      {!horizontal && <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">도구</p>}
 
       {TOOLS.map((tool) => {
         const isActive = value === tool.value
@@ -86,14 +119,9 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
             ref={isAnchor ? anchorRef : undefined}
             title={tool.title}
             onClick={() => handleToolClick(tool.value)}
-            className={`relative flex items-center justify-center w-10 h-10 rounded-xl border transition-colors ${
-              isActive
-                ? 'border-violet-500 bg-violet-100 text-violet-700'
-                : 'border-transparent bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-            }`}
+            className={btnClass(isActive)}
           >
             {tool.icon}
-            {/* 브러쉬 선택 색상 점 */}
             {tool.value === 'brush' && (
               <span
                 className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
@@ -104,18 +132,21 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
         )
       })}
 
-      {/* 구분선 + 바탕색 */}
-      <div className="my-2 border-t border-gray-200" />
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">바탕</p>
+      {/* 구분선 */}
+      {horizontal
+        ? <div className="h-8 w-px bg-gray-200 mx-1" />
+        : <div className="my-2 border-t border-gray-200" />
+      }
+
+      {/* 바탕색 라벨: 세로 모드에서만 */}
+      {!horizontal && <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">바탕</p>}
+
+      {/* 바탕색 버튼 */}
       <button
         ref={baseColorAnchorRef}
         title="바탕 색상"
         onClick={() => setBaseColorPopupOpen((o) => !o)}
-        className={`relative flex items-center justify-center w-10 h-10 rounded-xl border transition-colors ${
-          baseColorPopupOpen
-            ? 'border-violet-500 bg-violet-100 text-violet-700'
-            : 'border-transparent bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-        }`}
+        className={btnClass(baseColorPopupOpen)}
       >
         <FormatPaintIcon fontSize="small" />
         <span
@@ -124,13 +155,20 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
         />
       </button>
 
-      {/* 구분선 + Undo */}
-      <div className="my-2 border-t border-gray-200" />
+      {/* 구분선 */}
+      {horizontal
+        ? <div className="h-8 w-px bg-gray-200 mx-1" />
+        : <div className="my-2 border-t border-gray-200" />
+      }
+
+      {/* Undo 버튼 */}
       <button
         title="실행 취소 (Undo)"
         onClick={onUndo}
         disabled={!canUndo}
-        className={`flex items-center justify-center w-10 h-10 rounded-xl border transition-colors ${
+        className={`flex items-center justify-center rounded-xl border transition-colors ${
+          horizontal ? 'w-12 h-12' : 'w-10 h-10'
+        } ${
           canUndo
             ? 'border-transparent bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
             : 'border-transparent bg-white text-gray-300 cursor-not-allowed'
@@ -143,8 +181,8 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
       {baseColorPopupOpen && (
         <div
           ref={baseColorPopupRef}
-          className="absolute left-full top-0 ml-2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-56"
-          style={{ marginTop: '7rem' }}
+          className={popupPositionClass}
+          style={horizontal ? undefined : { marginTop: '7rem' }}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-700">바탕 색상</p>
@@ -181,10 +219,7 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
 
       {/* 브러쉬/지우개 팝업 */}
       {showPopup && (
-        <div
-          ref={popupRef}
-          className="absolute left-full top-0 ml-2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-56"
-        >
+        <div ref={popupRef} className={popupPositionClass}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-700">
               {value === 'brush' ? '브러쉬 설정' : '지우개 크기'}

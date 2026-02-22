@@ -26,6 +26,16 @@ export default function Editor() {
   const [updateTick, setUpdateTick] = useState(0)
   const drawingPanelRef = useRef<DrawingPanelHandle>(null)
   const [canUndo, setCanUndo] = useState(false)
+  const [mobileTab, setMobileTab] = useState<'design' | 'cake'>('design')
+  const [cakeTabVisited, setCakeTabVisited] = useState(false)
+
+  const handleMobileTab = useCallback((tab: 'design' | 'cake') => {
+    setMobileTab(tab)
+    if (tab === 'cake') {
+      setCakeTabVisited(true)
+      setTimeout(() => setUpdateTick((t) => t + 1), 50)
+    }
+  }, [])
 
   const handleUpdate = useCallback(() => {
     setUpdateTick((t) => t + 1)
@@ -43,57 +53,60 @@ export default function Editor() {
     return () => clearTimeout(timer)
   }, [baseColor])
 
+  const toolbarProps = {
+    value: tool,
+    onChange: setTool,
+    color,
+    onColorChange: setColor,
+    size,
+    onSizeChange: setSize,
+    baseColor,
+    onBaseColorChange: setBaseColor,
+    onUndo: () => drawingPanelRef.current?.undo(),
+    canUndo,
+  }
+
+  const drawingPanel = (
+    <DrawingPanel
+      ref={drawingPanelRef}
+      tool={tool}
+      color={color}
+      size={size}
+      cakeShape={cakeShape}
+      baseColor={baseColor}
+      topRef={topRef}
+      sideRef={sideRef}
+      onUndoChange={setCanUndo}
+      onUpdate={handleUpdate}
+    />
+  )
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0">
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🎂</span>
-          <h1 className="text-lg font-bold text-gray-800">케이크 도안 디자이너</h1>
+          <h1 className="text-base md:text-lg font-bold text-gray-800">케이크 도안 디자이너</h1>
         </div>
-        <p className="text-xs text-gray-400">브러쉬로 그리고 3D 미리보기를 확인하세요</p>
+        <p className="hidden md:block text-xs text-gray-400">브러쉬로 그리고 3D 미리보기를 확인하세요</p>
       </header>
 
-      {/* Main */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left: Tools + Canvases (1.8) */}
+      {/* ── 데스크탑 레이아웃 (md+) ── */}
+      <div className="hidden md:flex flex-1 min-h-0 overflow-hidden">
+        {/* Left: Tools + Canvases */}
         <div className="flex min-w-0 border-r border-gray-200 bg-white overflow-y-auto" style={{ flex: '1.8' }}>
           <div className="flex gap-0 flex-1">
-            {/* Sidebar: Toolbar */}
             <div className="w-16 shrink-0 border-r border-gray-100 p-3 bg-gray-50 flex flex-col items-center">
-              <Toolbar
-                value={tool}
-                onChange={setTool}
-                color={color}
-                onColorChange={setColor}
-                size={size}
-                onSizeChange={setSize}
-                baseColor={baseColor}
-                onBaseColorChange={setBaseColor}
-                onUndo={() => drawingPanelRef.current?.undo()}
-                canUndo={canUndo}
-              />
+              <Toolbar {...toolbarProps} />
             </div>
-
-            {/* Drawing canvases */}
             <div className="flex-1 p-4 overflow-y-auto">
-              <DrawingPanel
-                ref={drawingPanelRef}
-                tool={tool}
-                color={color}
-                size={size}
-                cakeShape={cakeShape}
-                baseColor={baseColor}
-                topRef={topRef}
-                sideRef={sideRef}
-                onUndoChange={setCanUndo}
-                onUpdate={handleUpdate}
-              />
+              {drawingPanel}
             </div>
           </div>
         </div>
 
-        {/* Right: 3D preview (1.2) */}
+        {/* Right: 3D preview */}
         <div className="min-w-0 flex flex-col" style={{ flex: '1.2' }}>
           <div className="flex-1 p-4">
             <CakePreview3D
@@ -105,16 +118,11 @@ export default function Editor() {
               baseColor={baseColor}
             />
           </div>
-
-          {/* Bottom controls for right panel */}
           <div className="border-t border-gray-200 p-4 bg-white shrink-0 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                케이크 모양
-              </p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">케이크 모양</p>
               <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} />
             </div>
-
             <button
               onClick={exportToPNG}
               className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
@@ -126,8 +134,83 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 px-6 py-2 flex items-center justify-center gap-3 shrink-0">
+      {/* ── 모바일 레이아웃 (<md) ── */}
+      <div className="flex md:hidden flex-col flex-1 min-h-0 overflow-hidden">
+
+        {/* 탭 바 */}
+        <div className="flex shrink-0 bg-white border-b border-gray-200">
+          {[
+            { id: 'design', label: '시안', icon: '✏️' },
+            { id: 'cake',   label: '케이크', icon: '🎂' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleMobileTab(tab.id as 'design' | 'cake')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors border-b-2 ${
+                mobileTab === tab.id
+                  ? 'border-violet-500 text-violet-600'
+                  : 'border-transparent text-gray-400'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* 콘텐츠 영역 */}
+        <div className="flex-1 min-h-0 relative overflow-hidden">
+          {/* 시안 탭: 항상 마운트, 숨김만 */}
+          <div className={`absolute inset-0 overflow-y-auto bg-white p-4 ${
+            mobileTab === 'design'
+              ? 'pb-20'   /* 하단 바 1행 높이 확보 */
+              : 'invisible pointer-events-none'
+          }`}>
+            {drawingPanel}
+          </div>
+
+          {/* 케이크 탭: 첫 방문 후 마운트 유지 */}
+          {cakeTabVisited && (
+            <div className={`absolute inset-0 bg-gray-50 ${mobileTab !== 'cake' ? 'invisible pointer-events-none' : ''}`}>
+              <CakePreview3D
+                topRef={topRef}
+                sideRef={sideRef}
+                cakeShape={cakeShape}
+                updateTick={updateTick}
+                canvasRef={threeCanvasRef}
+                baseColor={baseColor}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 하단 고정 바: 한 줄 가로 스크롤 */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg h-16 flex items-center">
+          <div className="flex items-center gap-2 overflow-x-auto px-3 w-full" style={{ scrollbarWidth: 'none' }}>
+            {/* 도구 툴바: 시안 탭에서만 */}
+            {mobileTab === 'design' && (
+              <>
+                <Toolbar {...toolbarProps} horizontal />
+                <div className="h-8 w-px bg-gray-200 shrink-0" />
+              </>
+            )}
+            {/* 케이크 모양 */}
+            <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} compact />
+            <div className="h-8 w-px bg-gray-200 shrink-0" />
+            {/* 저장 버튼 */}
+            <button
+              onClick={exportToPNG}
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"
+            >
+              <span>📥</span>
+              <span>저장</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer: 데스크탑에서만 */}
+      <footer className="hidden md:flex bg-white border-t border-gray-200 px-6 py-2 items-center justify-center gap-3 shrink-0">
         <span className="text-xs text-gray-500 font-medium">Seoyoon Park</span>
         <span className="text-gray-300">·</span>
         <a

@@ -119,6 +119,58 @@ export default function SideFaceCanvas({
     setCursor(null)
   }, [])
 
+  const handleTouchStart = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      const pos = e.target.getStage()?.getPointerPosition()
+      if (!pos) return
+
+      onBeforeActionRef.current()
+      isDrawing.current = true
+      startPos.current = { x: pos.x, y: pos.y }
+      const id = `line-${Date.now()}`
+      currentId.current = id
+      setCursor(pos)
+
+      onLinesChange((prev) => [
+        ...prev,
+        {
+          id,
+          points: [pos.x, pos.y],
+          stroke: tool === 'eraser' ? '#ffffff' : color,
+          strokeWidth: size,
+          globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
+        },
+      ])
+    },
+    [tool, color, size, onLinesChange]
+  )
+
+  const handleTouchMove = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      const pos = e.target.getStage()?.getPointerPosition()
+      if (!pos) return
+
+      setCursor(pos)
+
+      if (!isDrawing.current || !currentId.current) return
+      onLinesChange((prev) =>
+        prev.map((l) =>
+          l.id === currentId.current
+            ? { ...l, points: [...l.points, pos.x, pos.y] }
+            : l
+        )
+      )
+    },
+    [onLinesChange]
+  )
+
+  const handleTouchEnd = useCallback(() => {
+    isDrawing.current = false
+    currentId.current = null
+    setCursor(null)
+    notifyUpdate()
+  }, [notifyUpdate])
+
   return (
     <div className="flex flex-col items-center">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
@@ -133,7 +185,10 @@ export default function SideFaceCanvas({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
-          style={{ cursor: 'none' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ cursor: 'none', touchAction: 'none' }}
         >
           {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
           <Layer listening={false}>

@@ -231,6 +231,63 @@ export default function TopFaceCanvas({
     setCursor(null)
   }, [])
 
+  const handleTouchStart = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      const pos = e.target.getStage()?.getPointerPosition()
+      if (!pos) return
+
+      if (tool === 'fill') {
+        floodFill(pos.x, pos.y)
+        return
+      }
+
+      onBeforeActionRef.current()
+      isDrawing.current = true
+      startPos.current = { x: pos.x, y: pos.y }
+      const id = `line-${Date.now()}`
+      currentId.current = id
+      setCursor(pos)
+
+      onLinesChange((prev) => [
+        ...prev,
+        {
+          id,
+          points: [pos.x, pos.y],
+          stroke: tool === 'eraser' ? '#ffffff' : color,
+          strokeWidth: size,
+          globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
+        },
+      ])
+    },
+    [tool, color, size, floodFill, onLinesChange]
+  )
+
+  const handleTouchMove = useCallback(
+    (e: Konva.KonvaEventObject<TouchEvent>) => {
+      const pos = e.target.getStage()?.getPointerPosition()
+      if (!pos) return
+
+      setCursor(pos)
+
+      if (!isDrawing.current || !currentId.current) return
+      onLinesChange((prev) =>
+        prev.map((l) =>
+          l.id === currentId.current
+            ? { ...l, points: [...l.points, pos.x, pos.y] }
+            : l
+        )
+      )
+    },
+    [onLinesChange]
+  )
+
+  const handleTouchEnd = useCallback(() => {
+    isDrawing.current = false
+    currentId.current = null
+    setCursor(null)
+    notifyUpdate()
+  }, [notifyUpdate])
+
   const handleMouseUp = useCallback(() => {
     isDrawing.current = false
     currentId.current = null
@@ -253,7 +310,10 @@ export default function TopFaceCanvas({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
-          style={{ cursor: tool === 'fill' ? 'crosshair' : 'none' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ cursor: tool === 'fill' ? 'crosshair' : 'none', touchAction: 'none' }}
         >
           {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
           <Layer listening={false}>
