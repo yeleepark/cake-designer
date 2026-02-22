@@ -211,12 +211,12 @@ export default function Toolbar({ value, onChange, color, onColorChange, size, o
               <p className="text-xs text-gray-500">크기</p>
               <span className="text-xs font-semibold text-violet-600">{size}px</span>
             </div>
-            <div className="flex items-center justify-center h-10 mb-2 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-center mb-2 bg-gray-50 rounded-lg" style={{ height: 68 }}>
               <div
                 className="rounded-full"
                 style={{
-                  width: Math.min(size, 40),
-                  height: Math.min(size, 40),
+                  width: size,
+                  height: size,
                   backgroundColor: value === 'brush' ? color : '#6b7280',
                 }}
               />

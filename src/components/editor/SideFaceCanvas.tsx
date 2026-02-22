@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useCallback } from 'react'
-import { Stage, Layer, Line, Rect, Circle } from 'react-konva'
+import { Stage, Layer, Line, Rect } from 'react-konva'
 import type Konva from 'konva'
 import type { Tool, CakeShape, LineData } from '@/types/cake'
 
@@ -93,7 +93,7 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
         옆면 전개도 {cakeShape === 'circle' ? '(원주 펼침)' : '(4면 전개도)'}
       </p>
-      <div className="rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white overflow-x-auto">
+      <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white overflow-x-auto">
         <Stage
           ref={stageRef}
           width={CANVAS_W}
@@ -120,20 +120,23 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
               />
             ))}
 
-            {cursor && (tool === 'brush' || tool === 'eraser') && (
-              <Circle
-                x={cursor.x}
-                y={cursor.y}
-                radius={size / 2}
-                stroke={tool === 'eraser' ? '#9ca3af' : color}
-                strokeWidth={1}
-                fill="transparent"
-                listening={false}
-                perfectDrawEnabled={false}
-              />
-            )}
           </Layer>
         </Stage>
+        {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 (texture 캡처에서 제외) */}
+        {cursor && (tool === 'brush' || tool === 'eraser') && (
+          <div
+            style={{
+              position: 'absolute',
+              left: cursor.x - size / 2,
+              top: cursor.y - size / 2,
+              width: size,
+              height: size,
+              borderRadius: '50%',
+              border: `1px solid ${tool === 'eraser' ? '#9ca3af' : color}`,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
       </div>
     </div>
   )

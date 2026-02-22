@@ -194,7 +194,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
         윗면 {cakeShape === 'circle' ? '(원형)' : '(사각형)'}
       </p>
-      <div className="rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white">
+      <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white">
         <Stage
           ref={stageRef}
           width={CANVAS_SIZE}
@@ -260,21 +260,23 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
                 listening={false}
               />
             )}
-            {/* 브러쉬/지우개 크기 가이드 커서 — 항상 최상단 */}
-            {cursor && (tool === 'brush' || tool === 'eraser') && (
-              <Circle
-                x={cursor.x}
-                y={cursor.y}
-                radius={size / 2}
-                stroke={tool === 'eraser' ? '#9ca3af' : color}
-                strokeWidth={1}
-                fill="transparent"
-                listening={false}
-                perfectDrawEnabled={false}
-              />
-            )}
           </Layer>
         </Stage>
+        {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 (texture 캡처에서 제외) */}
+        {cursor && (tool === 'brush' || tool === 'eraser') && (
+          <div
+            style={{
+              position: 'absolute',
+              left: cursor.x - size / 2,
+              top: cursor.y - size / 2,
+              width: size,
+              height: size,
+              borderRadius: '50%',
+              border: `1px solid ${tool === 'eraser' ? '#9ca3af' : color}`,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
       </div>
     </div>
   )
