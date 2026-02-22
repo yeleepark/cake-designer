@@ -51,6 +51,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
   const currentId = useRef<string | null>(null)
+  const startPos = useRef<{ x: number; y: number } | null>(null)
 
   const notifyUpdate = useCallback(() => {
     setTimeout(() => onUpdate?.(), 50)
@@ -140,6 +141,7 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
       }
 
       isDrawing.current = true
+      startPos.current = { x: pos.x, y: pos.y }
       const id = `line-${Date.now()}`
       currentId.current = id
 
@@ -166,13 +168,23 @@ export default function TopFaceCanvas({ stageRef, tool, color, size, cakeShape, 
       setCursor({ x: pos.x, y: pos.y })
 
       if (!isDrawing.current || !currentId.current) return
-      setLines((prev) =>
-        prev.map((l) =>
-          l.id === currentId.current
-            ? { ...l, points: [...l.points, pos.x, pos.y] }
-            : l
+      if (e.evt.shiftKey && startPos.current) {
+        setLines((prev) =>
+          prev.map((l) =>
+            l.id === currentId.current
+              ? { ...l, points: [startPos.current!.x, startPos.current!.y, pos.x, pos.y] }
+              : l
+          )
         )
-      )
+      } else {
+        setLines((prev) =>
+          prev.map((l) =>
+            l.id === currentId.current
+              ? { ...l, points: [...l.points, pos.x, pos.y] }
+              : l
+          )
+        )
+      }
     },
     []
   )

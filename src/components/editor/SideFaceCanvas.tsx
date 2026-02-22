@@ -29,6 +29,7 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
   const currentId = useRef<string | null>(null)
+  const startPos = useRef<{ x: number; y: number } | null>(null)
 
   const CANVAS_W = getSideWidth(cakeShape)
 
@@ -42,6 +43,7 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
       if (!pos) return
 
       isDrawing.current = true
+      startPos.current = { x: pos.x, y: pos.y }
       const id = `line-${Date.now()}`
       currentId.current = id
 
@@ -67,13 +69,23 @@ export default function SideFaceCanvas({ stageRef, tool, color, size, cakeShape,
       setCursor({ x: pos.x, y: pos.y })
 
       if (!isDrawing.current || !currentId.current) return
-      setLines((prev) =>
-        prev.map((l) =>
-          l.id === currentId.current
-            ? { ...l, points: [...l.points, pos.x, pos.y] }
-            : l
+      if (e.evt.shiftKey && startPos.current) {
+        setLines((prev) =>
+          prev.map((l) =>
+            l.id === currentId.current
+              ? { ...l, points: [startPos.current!.x, startPos.current!.y, pos.x, pos.y] }
+              : l
+          )
         )
-      )
+      } else {
+        setLines((prev) =>
+          prev.map((l) =>
+            l.id === currentId.current
+              ? { ...l, points: [...l.points, pos.x, pos.y] }
+              : l
+          )
+        )
+      }
     },
     []
   )
