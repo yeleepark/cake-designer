@@ -8,7 +8,9 @@ import type { Tool, CakeShape, LineData, FillSnapshot } from '@/types/cake'
 interface Props {
   stageRef: React.RefObject<Konva.Stage | null>
   tool: Tool
-  color: string
+  brushColor: string
+  lineColor: string
+  fillColor: string
   size: number
   cakeShape: CakeShape
   baseColor: string
@@ -48,7 +50,9 @@ function getClipFunc(shape: CakeShape) {
 export default function TopFaceCanvas({
   stageRef,
   tool,
-  color,
+  brushColor,
+  lineColor,
+  fillColor,
   size,
   cakeShape,
   baseColor,
@@ -97,7 +101,7 @@ export default function TopFaceCanvas({
       const targetB = data[baseIdx + 2]
       const targetA = data[baseIdx + 3]
 
-      const [fr, fg, fb] = hexToRgb(color)
+      const [fr, fg, fb] = hexToRgb(fillColor)
       if (targetR === fr && targetG === fg && targetB === fb && targetA === 255) return
 
       onBeforeActionRef.current()
@@ -165,7 +169,7 @@ export default function TopFaceCanvas({
       }
       img.src = dataUrl
     },
-    [color, stageRef, notifyUpdate, onSnapshotsChange]
+    [fillColor, stageRef, notifyUpdate, onSnapshotsChange]
   )
 
   const handleMouseDown = useCallback(
@@ -190,13 +194,13 @@ export default function TopFaceCanvas({
         {
           id,
           points: [pos.x, pos.y, pos.x, pos.y],
-          stroke: tool === 'eraser' ? '#ffffff' : color,
+          stroke: tool === 'eraser' ? '#ffffff' : tool === 'line' ? lineColor : brushColor,
           strokeWidth: size,
           globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
         },
       ])
     },
-    [tool, color, size, floodFill, onLinesChange]
+    [tool, brushColor, lineColor, size, floodFill, onLinesChange]
   )
 
   const handleMouseMove = useCallback(
@@ -264,13 +268,13 @@ export default function TopFaceCanvas({
         {
           id,
           points: [pos.x, pos.y, pos.x, pos.y],
-          stroke: tool === 'eraser' ? '#ffffff' : color,
+          stroke: tool === 'eraser' ? '#ffffff' : tool === 'line' ? lineColor : brushColor,
           strokeWidth: size,
           globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
         },
       ])
     },
-    [tool, color, size, floodFill, onLinesChange]
+    [tool, brushColor, lineColor, size, floodFill, onLinesChange]
   )
 
   const handleTouchMove = useCallback(
@@ -408,7 +412,7 @@ export default function TopFaceCanvas({
               width: size,
               height: size,
               borderRadius: '50%',
-              border: `1px solid ${tool === 'eraser' ? '#9ca3af' : color}`,
+              border: `1px solid ${tool === 'eraser' ? '#9ca3af' : brushColor}`,
               pointerEvents: 'none',
             }}
           />

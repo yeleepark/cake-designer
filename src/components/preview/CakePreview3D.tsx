@@ -11,35 +11,46 @@ const TOP_CANVAS_SIZE = 300
 const TOP_RADIUS = 130
 const CROP_SIZE = TOP_RADIUS * 2                        // 260
 const CROP_OFFSET = (TOP_CANVAS_SIZE - CROP_SIZE) / 2  // 20
+const TEX_SCALE = 3                                     // 텍스처 업스케일 배율
 const PLATE_COLOR = '#f9fafb'
 
-function withBg(src: HTMLCanvasElement, w: number, h: number, bgColor: string, offsetX = 0, offsetY = 0): HTMLCanvasElement {
+function cropTopCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElement {
+  const outW = CROP_SIZE * TEX_SCALE
+  const outH = CROP_SIZE * TEX_SCALE
   const out = document.createElement('canvas')
-  out.width = w
-  out.height = h
+  out.width = outW
+  out.height = outH
   const ctx = out.getContext('2d')!
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
   ctx.fillStyle = bgColor
-  ctx.fillRect(0, 0, w, h)
-  ctx.drawImage(src, offsetX, offsetY)
+  ctx.fillRect(0, 0, outW, outH)
+  // src(300x300)에서 crop 영역(offset~offset+cropSize)을 outW×outH로 확대
+  ctx.drawImage(src, CROP_OFFSET, CROP_OFFSET, CROP_SIZE, CROP_SIZE, 0, 0, outW, outH)
   return out
 }
 
-function cropTopCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElement {
-  return withBg(src, CROP_SIZE, CROP_SIZE, bgColor, -CROP_OFFSET, -CROP_OFFSET)
-}
-
 function prepSideCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElement {
-  return withBg(src, src.width, src.height, bgColor)
+  const outW = src.width * TEX_SCALE
+  const outH = src.height * TEX_SCALE
+  const out = document.createElement('canvas')
+  out.width = outW
+  out.height = outH
+  const ctx = out.getContext('2d')!
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.fillStyle = bgColor
+  ctx.fillRect(0, 0, outW, outH)
+  ctx.drawImage(src, 0, 0, outW, outH)
+  return out
 }
 
-/** 텍스처 품질 설정 — 캔버스 텍스처에 최적화된 필터 적용 */
+/** 텍스처 품질 설정 — 업스케일된 텍스처에 밉맵+트리리니어 필터 적용 */
 function applyTextureSettings(tex: THREE.CanvasTexture, anisotropy: number) {
   tex.colorSpace = THREE.SRGBColorSpace
-  // 캔버스 텍스처는 non-POT이므로 밉맵 비활성화 후 Linear 필터 사용
-  tex.generateMipmaps = false
-  tex.minFilter = THREE.LinearFilter
+  tex.generateMipmaps = true
+  tex.minFilter = THREE.LinearMipmapLinearFilter
   tex.magFilter = THREE.LinearFilter
-  // Anisotropy: 비스듬한 각도에서도 선명하게
   tex.anisotropy = anisotropy
 }
 

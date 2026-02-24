@@ -8,7 +8,8 @@ import type { Tool, CakeShape, LineData } from '@/types/cake'
 interface Props {
   stageRef: React.RefObject<Konva.Stage | null>
   tool: Tool
-  color: string
+  brushColor: string
+  lineColor: string
   size: number
   cakeShape: CakeShape
   baseColor: string
@@ -30,7 +31,8 @@ function getSideWidth(shape: CakeShape) {
 export default function SideFaceCanvas({
   stageRef,
   tool,
-  color,
+  brushColor,
+  lineColor,
   size,
   cakeShape,
   baseColor,
@@ -73,13 +75,13 @@ export default function SideFaceCanvas({
         {
           id,
           points: [pos.x, pos.y, pos.x, pos.y],
-          stroke: tool === 'eraser' ? '#ffffff' : color,
+          stroke: tool === 'eraser' ? '#ffffff' : tool === 'line' ? lineColor : brushColor,
           strokeWidth: size,
           globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
         },
       ])
     },
-    [tool, color, size, onLinesChange]
+    [tool, brushColor, lineColor, size, onLinesChange]
   )
 
   const handleMouseMove = useCallback(
@@ -147,13 +149,13 @@ export default function SideFaceCanvas({
         {
           id,
           points: [pos.x, pos.y, pos.x, pos.y],
-          stroke: tool === 'eraser' ? '#ffffff' : color,
+          stroke: tool === 'eraser' ? '#ffffff' : tool === 'line' ? lineColor : brushColor,
           strokeWidth: size,
           globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
         },
       ])
     },
-    [tool, color, size, onLinesChange]
+    [tool, brushColor, lineColor, size, onLinesChange]
   )
 
   const handleTouchMove = useCallback(
@@ -242,7 +244,7 @@ export default function SideFaceCanvas({
               width: size,
               height: size,
               borderRadius: '50%',
-              border: `1px solid ${tool === 'eraser' ? '#9ca3af' : color}`,
+              border: `1px solid ${tool === 'eraser' ? '#9ca3af' : brushColor}`,
               pointerEvents: 'none',
             }}
           />

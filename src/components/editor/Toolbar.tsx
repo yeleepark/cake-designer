@@ -12,8 +12,12 @@ import type { Tool } from '@/types/cake'
 interface Props {
   value: Tool
   onChange: (tool: Tool) => void
-  color: string
-  onColorChange: (color: string) => void
+  brushColor: string
+  onBrushColorChange: (color: string) => void
+  lineColor: string
+  onLineColorChange: (color: string) => void
+  fillColor: string
+  onFillColorChange: (color: string) => void
   size: number
   onSizeChange: (size: number) => void
   baseColor: string
@@ -41,8 +45,12 @@ const TOOLS: { value: Tool; icon: React.ReactNode; title: string }[] = [
 export default function Toolbar({
   value,
   onChange,
-  color,
-  onColorChange,
+  brushColor,
+  onBrushColorChange,
+  lineColor,
+  onLineColorChange,
+  fillColor,
+  onFillColorChange,
   size,
   onSizeChange,
   baseColor,
@@ -82,15 +90,15 @@ export default function Toolbar({
   }, [])
 
   const handleToolClick = (tool: Tool) => {
-    if ((tool === 'brush' || tool === 'eraser' || tool === 'line') && value === tool) {
+    if ((tool === 'brush' || tool === 'eraser' || tool === 'line' || tool === 'fill') && value === tool) {
       setPopupOpen((o) => !o)
     } else {
       onChange(tool)
-      setPopupOpen(tool === 'brush' || tool === 'eraser' || tool === 'line')
+      setPopupOpen(tool === 'brush' || tool === 'eraser' || tool === 'line' || tool === 'fill')
     }
   }
 
-  const showPopup = popupOpen && (value === 'brush' || value === 'eraser' || value === 'line')
+  const showPopup = popupOpen && (value === 'brush' || value === 'eraser' || value === 'line' || value === 'fill')
 
   // 팝업 위치: 세로 모드는 오른쪽, 가로(모바일) 모드는 위쪽
   const popupPositionClass = horizontal
@@ -113,7 +121,7 @@ export default function Toolbar({
 
       {TOOLS.map((tool) => {
         const isActive = value === tool.value
-        const isAnchor = isActive && (tool.value === 'brush' || tool.value === 'eraser' || tool.value === 'line')
+        const isAnchor = isActive && (tool.value === 'brush' || tool.value === 'eraser' || tool.value === 'line' || tool.value === 'fill')
 
         return (
           <button
@@ -124,10 +132,22 @@ export default function Toolbar({
             className={btnClass(isActive)}
           >
             {tool.icon}
-            {(tool.value === 'brush' || tool.value === 'line') && (
+            {tool.value === 'brush' && (
               <span
                 className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: brushColor }}
+              />
+            )}
+            {tool.value === 'line' && (
+              <span
+                className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
+                style={{ backgroundColor: lineColor }}
+              />
+            )}
+            {tool.value === 'fill' && (
+              <span
+                className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
+                style={{ backgroundColor: fillColor }}
               />
             )}
           </button>
@@ -224,7 +244,7 @@ export default function Toolbar({
         <div ref={popupRef} className={popupPositionClass}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-700">
-              {value === 'brush' ? '브러쉬 설정' : value === 'line' ? '직선 설정' : '지우개 크기'}
+              {value === 'brush' ? '브러쉬 설정' : value === 'line' ? '직선 설정' : value === 'fill' ? '채우기 색상' : '지우개 크기'}
             </p>
             <button
               onClick={() => setPopupOpen(false)}
@@ -234,16 +254,16 @@ export default function Toolbar({
             </button>
           </div>
 
-          {(value === 'brush' || value === 'line') && (
+          {value === 'brush' && (
             <div className="mb-4">
               <p className="text-xs text-gray-500 mb-2">색상</p>
               <div className="grid grid-cols-5 gap-1.5 mb-2">
                 {PRESET_COLORS.map((c) => (
                   <button
                     key={c}
-                    onClick={() => onColorChange(c)}
+                    onClick={() => onBrushColorChange(c)}
                     className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
-                      color === c ? 'border-violet-500 scale-110' : 'border-gray-200'
+                      brushColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
                     }`}
                     style={{ backgroundColor: c }}
                   />
@@ -252,15 +272,70 @@ export default function Toolbar({
               <div className="flex items-center gap-2 mt-1">
                 <input
                   type="color"
-                  value={color}
-                  onChange={(e) => onColorChange(e.target.value)}
+                  value={brushColor}
+                  onChange={(e) => onBrushColorChange(e.target.value)}
                   className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
                 />
-                <span className="text-xs font-mono text-gray-500">{color}</span>
+                <span className="text-xs font-mono text-gray-500">{brushColor}</span>
               </div>
             </div>
           )}
 
+          {value === 'line' && (
+            <div className="mb-4">
+              <p className="text-xs text-gray-500 mb-2">색상</p>
+              <div className="grid grid-cols-5 gap-1.5 mb-2">
+                {PRESET_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => onLineColorChange(c)}
+                    className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
+                      lineColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="color"
+                  value={lineColor}
+                  onChange={(e) => onLineColorChange(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
+                />
+                <span className="text-xs font-mono text-gray-500">{lineColor}</span>
+              </div>
+            </div>
+          )}
+
+          {value === 'fill' && (
+            <div>
+              <p className="text-xs text-gray-500 mb-2">색상</p>
+              <div className="grid grid-cols-5 gap-1.5 mb-2">
+                {PRESET_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => onFillColorChange(c)}
+                    className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
+                      fillColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="color"
+                  value={fillColor}
+                  onChange={(e) => onFillColorChange(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
+                />
+                <span className="text-xs font-mono text-gray-500">{fillColor}</span>
+              </div>
+            </div>
+          )}
+
+          {(value === 'brush' || value === 'line' || value === 'eraser') && (
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs text-gray-500">크기</p>
@@ -272,7 +347,7 @@ export default function Toolbar({
                 style={{
                   width: size,
                   height: size,
-                  backgroundColor: value === 'brush' ? color : '#6b7280',
+                  backgroundColor: value === 'brush' ? brushColor : value === 'line' ? lineColor : '#6b7280',
                 }}
               />
             </div>
@@ -289,6 +364,7 @@ export default function Toolbar({
               <span>60</span>
             </div>
           </div>
+          )}
         </div>
       )}
     </div>

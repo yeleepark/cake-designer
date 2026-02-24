@@ -18,7 +18,9 @@ export interface DrawingPanelHandle {
 
 interface Props {
   tool: Tool
-  color: string
+  brushColor: string
+  lineColor: string
+  fillColor: string
   size: number
   cakeShape: CakeShape
   baseColor: string
@@ -29,7 +31,7 @@ interface Props {
 }
 
 const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel(
-  { tool, color, size, cakeShape, baseColor, topRef, sideRef, onUndoChange, onUpdate },
+  { tool, brushColor, lineColor, fillColor, size, cakeShape, baseColor, topRef, sideRef, onUndoChange, onUpdate },
   ref
 ) {
   const [topLines, setTopLines] = useState<LineData[]>([])
@@ -73,7 +75,9 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
       <TopFaceCanvas
         stageRef={topRef}
         tool={tool}
-        color={color}
+        brushColor={brushColor}
+        lineColor={lineColor}
+        fillColor={fillColor}
         size={size}
         cakeShape={cakeShape}
         baseColor={baseColor}
@@ -87,7 +91,8 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
       <SideFaceCanvas
         stageRef={sideRef}
         tool={tool}
-        color={color}
+        brushColor={brushColor}
+        lineColor={lineColor}
         size={size}
         cakeShape={cakeShape}
         baseColor={baseColor}

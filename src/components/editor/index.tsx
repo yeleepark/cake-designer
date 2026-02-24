@@ -19,7 +19,7 @@ const CakePreview3D = dynamic(() => import('@/components/preview/CakePreview3D')
 })
 
 export default function Editor() {
-  const { tool, setTool, color, setColor, size, setSize, cakeShape, setCakeShape, baseColor, setBaseColor, topRef, sideRef } =
+  const { tool, setTool, brushColor, setBrushColor, lineColor, setLineColor, fillColor, setFillColor, size, setSize, cakeShape, setCakeShape, baseColor, setBaseColor, topRef, sideRef } =
     useDrawing()
   const threeCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const { exportToPNG } = useExport(topRef, sideRef, threeCanvasRef)
@@ -54,8 +54,12 @@ export default function Editor() {
   const toolbarProps = {
     value: tool,
     onChange: setTool,
-    color,
-    onColorChange: setColor,
+    brushColor,
+    onBrushColorChange: setBrushColor,
+    lineColor,
+    onLineColorChange: setLineColor,
+    fillColor,
+    onFillColorChange: setFillColor,
     size,
     onSizeChange: setSize,
     baseColor,
@@ -118,7 +122,9 @@ export default function Editor() {
               <DrawingPanel
                 ref={drawingPanelRef}
                 tool={tool}
-                color={color}
+                brushColor={brushColor}
+                lineColor={lineColor}
+                fillColor={fillColor}
                 size={size}
                 cakeShape={cakeShape}
                 baseColor={baseColor}

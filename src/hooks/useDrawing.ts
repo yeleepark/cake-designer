@@ -6,7 +6,9 @@ import type { Tool, CakeShape } from '@/types/cake'
 
 export function useDrawing() {
   const [tool, setTool] = useState<Tool>('brush')
-  const [color, setColor] = useState('#7c3aed')
+  const [brushColor, setBrushColor] = useState('#7c3aed')
+  const [lineColor, setLineColor] = useState('#C44569')
+  const [fillColor, setFillColor] = useState('#FF6B81')
   const [size, setSize] = useState(8)
   const [cakeShape, setCakeShape] = useState<CakeShape>('circle')
   const [baseColor, setBaseColor] = useState('#ffffff')
@@ -17,8 +19,12 @@ export function useDrawing() {
   return {
     tool,
     setTool,
-    color,
-    setColor,
+    brushColor,
+    setBrushColor,
+    lineColor,
+    setLineColor,
+    fillColor,
+    setFillColor,
     size,
     setSize,
     cakeShape,
