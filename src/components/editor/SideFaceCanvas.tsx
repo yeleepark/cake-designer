@@ -6,6 +6,7 @@ import type Konva from 'konva'
 import type { Tool, CakeShape, LineData } from '@/types/cake'
 
 interface Props {
+  containerWidth: number
   stageRef: React.RefObject<Konva.Stage | null>
   tool: Tool
   brushColor: string
@@ -17,6 +18,7 @@ interface Props {
   onLinesChange: React.Dispatch<React.SetStateAction<LineData[]>>
   onBeforeAction: () => void
   onUpdate?: () => void
+  onUndo?: () => void
 }
 
 const CAKE_HEIGHT = 120
@@ -29,6 +31,7 @@ function getSideWidth(shape: CakeShape) {
 }
 
 export default function SideFaceCanvas({
+  containerWidth,
   stageRef,
   tool,
   brushColor,
@@ -40,6 +43,7 @@ export default function SideFaceCanvas({
   onLinesChange,
   onBeforeAction,
   onUpdate,
+  onUndo,
 }: Props) {
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
@@ -47,6 +51,8 @@ export default function SideFaceCanvas({
   const currentId = useRef<string | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
   const onBeforeActionRef = useRef(onBeforeAction)
+  const isPinching = useRef(false)
+  const twoFingerStart = useRef<number>(0)
 
   useEffect(() => {
     onBeforeActionRef.current = onBeforeAction
@@ -133,6 +139,13 @@ export default function SideFaceCanvas({
 
   const handleTouchStart = useCallback(
     (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length >= 2) {
+        isPinching.current = true
+        twoFingerStart.current = Date.now()
+        return
+      }
+      if (isPinching.current) return
+
       const pos = e.target.getStage()?.getPointerPosition()
       if (!pos) return
 
@@ -160,6 +173,7 @@ export default function SideFaceCanvas({
 
   const handleTouchMove = useCallback(
     (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (isPinching.current) return
       const pos = e.target.getStage()?.getPointerPosition()
       if (!pos) return
 
@@ -187,19 +201,38 @@ export default function SideFaceCanvas({
     [onLinesChange]
   )
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: Konva.KonvaEventObject<TouchEvent>) => {
+    if (isPinching.current && e.evt.touches.length === 0) {
+      const elapsed = Date.now() - twoFingerStart.current
+      isPinching.current = false
+      if (elapsed < 300) {
+        onUndo?.()
+      }
+      return
+    }
     isDrawing.current = false
     currentId.current = null
     setCursor(null)
     notifyUpdate()
-  }, [notifyUpdate])
+  }, [notifyUpdate, onUndo])
+
+  const scale = containerWidth > 0 ? Math.min(1, containerWidth / CANVAS_W) : 1
 
   return (
     <div className="flex flex-col items-center">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
         옆면 전개도 {cakeShape === 'circle' ? '(원주 펼침)' : '(4면 전개도)'}
       </p>
-      <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white overflow-x-auto">
+      <div style={{ width: CANVAS_W * scale, height: CAKE_HEIGHT * scale }}>
+      <div
+        className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white"
+        style={{
+          width: CANVAS_W,
+          height: CAKE_HEIGHT,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
         <Stage
           ref={stageRef}
           width={CANVAS_W}
@@ -249,6 +282,7 @@ export default function SideFaceCanvas({
             }}
           />
         )}
+      </div>
       </div>
     </div>
   )

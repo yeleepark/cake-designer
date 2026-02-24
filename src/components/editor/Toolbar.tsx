@@ -109,9 +109,14 @@ export default function Toolbar({
     }
   }, [])
 
+  const vibrate = (ms = 10) => {
+    try { navigator?.vibrate?.(ms) } catch {}
+  }
+
   const hasPopup = (t: Tool) => t === 'brush' || t === 'eraser' || t === 'line' || t === 'fill' || t === 'stamp'
 
   const handleToolClick = (tool: Tool) => {
+    vibrate()
     if (hasPopup(tool) && value === tool) {
       setPopupOpen((o) => !o)
     } else {
@@ -124,8 +129,12 @@ export default function Toolbar({
 
   // 팝업 위치: 세로 모드는 오른쪽, 가로(모바일) 모드는 위쪽
   const popupPositionClass = horizontal
-    ? 'fixed bottom-[4.5rem] left-1/2 -translate-x-1/2 z-[200] bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-72'
+    ? 'fixed left-3 right-3 max-w-sm mx-auto z-[200] bg-white rounded-xl shadow-xl border border-gray-200 p-4'
     : 'absolute left-full top-0 ml-2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-56'
+
+  const popupBottomStyle = horizontal
+    ? { bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))' }
+    : undefined
 
   const btnClass = (active: boolean) =>
     `relative flex items-center justify-center rounded-xl border transition-colors ${
@@ -232,7 +241,7 @@ export default function Toolbar({
         <div
           ref={baseColorPopupRef}
           className={popupPositionClass}
-          style={horizontal ? undefined : { marginTop: '7rem' }}
+          style={horizontal ? popupBottomStyle : { marginTop: '7rem' }}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-700">바탕 색상</p>
@@ -269,7 +278,7 @@ export default function Toolbar({
 
       {/* 브러쉬/지우개 팝업 */}
       {showPopup && (
-        <div ref={popupRef} className={popupPositionClass}>
+        <div ref={popupRef} className={popupPositionClass} style={popupBottomStyle}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-700">
               {value === 'brush' ? '브러쉬 설정' : value === 'line' ? '직선 설정' : value === 'fill' ? '채우기 색상' : value === 'stamp' ? '스탬프 설정' : '지우개 크기'}

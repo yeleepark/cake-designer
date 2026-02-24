@@ -160,11 +160,55 @@ interface Props {
   baseColor: string
 }
 
-export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, canvasRef, baseColor }: Props) {
+function InteractionHint() {
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !localStorage.getItem('cake3d-hint-seen')
+  })
+
+  useEffect(() => {
+    if (!visible) return
+    const timer = setTimeout(() => {
+      setVisible(false)
+      localStorage.setItem('cake3d-hint-seen', '1')
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [visible])
+
+  if (!visible) return null
+
   return (
-    <div className="w-full h-full min-h-[400px]">
+    <div
+      className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 rounded-xl transition-opacity duration-500"
+      onClick={() => {
+        setVisible(false)
+        localStorage.setItem('cake3d-hint-seen', '1')
+      }}
+      onTouchStart={() => {
+        setVisible(false)
+        localStorage.setItem('cake3d-hint-seen', '1')
+      }}
+    >
+      <div className="text-center text-white px-4 py-3 rounded-xl bg-black/50 backdrop-blur-sm">
+        <p className="text-sm font-semibold mb-1">드래그로 회전 / 핀치로 확대</p>
+        <p className="text-xs opacity-80">탭하여 닫기</p>
+      </div>
+    </div>
+  )
+}
+
+export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, canvasRef, baseColor }: Props) {
+  const [isMobile] = useState(() =>
+    typeof window !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent)
+  )
+  const maxDpr = isMobile ? 1.5 : 2
+  const shadowSize = isMobile ? 1024 : 2048
+
+  return (
+    <div className="relative w-full h-full min-h-[400px]">
+      <InteractionHint />
       <Canvas
-        dpr={[1, 2]}
+        dpr={[1, maxDpr]}
         camera={{ position: [0, 2.5, 5], fov: 45 }}
         shadows
         gl={{
@@ -180,7 +224,7 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
           position={[5, 8, 5]}
           intensity={1.2}
           castShadow
-          shadow-mapSize={[2048, 2048]}
+          shadow-mapSize={[shadowSize, shadowSize]}
           shadow-camera-near={0.1}
           shadow-camera-far={30}
           shadow-camera-left={-5}

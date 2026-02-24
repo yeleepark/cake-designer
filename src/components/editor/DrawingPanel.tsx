@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
 import type Konva from 'konva'
 import type { Tool, CakeShape, LineData, FillSnapshot, StampType, StampData } from '@/types/cake'
+import { useContainerSize } from '@/hooks/useContainerSize'
 import TopFaceCanvas from './TopFaceCanvas'
 import SideFaceCanvas from './SideFaceCanvas'
 
@@ -42,6 +43,7 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
   const [topSnapshots, setTopSnapshots] = useState<FillSnapshot[]>([])
   const [topStamps, setTopStamps] = useState<StampData[]>([])
   const [sideLines, setSideLines] = useState<LineData[]>([])
+  const [canvasTab, setCanvasTab] = useState<'top' | 'side'>('top')
 
   // history는 ref로 관리 (불필요한 리렌더 방지)
   const history = useRef<HistoryEntry[]>([])
@@ -79,42 +81,77 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
 
   useImperativeHandle(ref, () => ({ undo }), [undo])
 
+  const containerRef = useRef<HTMLDivElement>(null)
+  const containerWidth = useContainerSize(containerRef)
+
   return (
-    <div className="flex flex-col gap-6">
-      <TopFaceCanvas
-        stageRef={topRef}
-        tool={tool}
-        brushColor={brushColor}
-        lineColor={lineColor}
-        fillColor={fillColor}
-        size={size}
-        cakeShape={cakeShape}
-        baseColor={baseColor}
-        stampColor={stampColor}
-        stampType={stampType}
-        stampSize={stampSize}
-        stamps={topStamps}
-        onStampsChange={setTopStamps}
-        lines={topLines}
-        snapshots={topSnapshots}
-        onLinesChange={setTopLines}
-        onSnapshotsChange={setTopSnapshots}
-        onBeforeAction={pushHistory}
-        onUpdate={onUpdate}
-      />
-      <SideFaceCanvas
-        stageRef={sideRef}
-        tool={tool}
-        brushColor={brushColor}
-        lineColor={lineColor}
-        size={size}
-        cakeShape={cakeShape}
-        baseColor={baseColor}
-        lines={sideLines}
-        onLinesChange={setSideLines}
-        onBeforeAction={pushHistory}
-        onUpdate={onUpdate}
-      />
+    <div ref={containerRef} className="flex flex-col md:gap-6">
+      {/* 모바일 캔버스 탭 (윗면/옆면 전환) */}
+      <div className="flex md:hidden mb-3 bg-gray-100 rounded-lg p-0.5">
+        <button
+          onClick={() => setCanvasTab('top')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            canvasTab === 'top'
+              ? 'bg-white text-violet-600 shadow-sm'
+              : 'text-gray-500'
+          }`}
+        >
+          윗면
+        </button>
+        <button
+          onClick={() => setCanvasTab('side')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            canvasTab === 'side'
+              ? 'bg-white text-violet-600 shadow-sm'
+              : 'text-gray-500'
+          }`}
+        >
+          옆면
+        </button>
+      </div>
+
+      <div className={`${canvasTab !== 'top' ? 'hidden' : ''} md:block`}>
+        <TopFaceCanvas
+          containerWidth={containerWidth}
+          stageRef={topRef}
+          tool={tool}
+          brushColor={brushColor}
+          lineColor={lineColor}
+          fillColor={fillColor}
+          size={size}
+          cakeShape={cakeShape}
+          baseColor={baseColor}
+          stampColor={stampColor}
+          stampType={stampType}
+          stampSize={stampSize}
+          stamps={topStamps}
+          onStampsChange={setTopStamps}
+          lines={topLines}
+          snapshots={topSnapshots}
+          onLinesChange={setTopLines}
+          onSnapshotsChange={setTopSnapshots}
+          onBeforeAction={pushHistory}
+          onUpdate={onUpdate}
+          onUndo={undo}
+        />
+      </div>
+      <div className={`${canvasTab !== 'side' ? 'hidden' : ''} md:block`}>
+        <SideFaceCanvas
+          containerWidth={containerWidth}
+          stageRef={sideRef}
+          tool={tool}
+          brushColor={brushColor}
+          lineColor={lineColor}
+          size={size}
+          cakeShape={cakeShape}
+          baseColor={baseColor}
+          lines={sideLines}
+          onLinesChange={setSideLines}
+          onBeforeAction={pushHistory}
+          onUpdate={onUpdate}
+          onUndo={undo}
+        />
+      </div>
     </div>
   )
 })

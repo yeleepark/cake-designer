@@ -27,6 +27,25 @@ export default function Editor() {
   const drawingPanelRef = useRef<DrawingPanelHandle>(null)
   const [canUndo, setCanUndo] = useState(false)
   const [mobileTab, setMobileTab] = useState<'design' | 'cake'>('design')
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [scrollFade, setScrollFade] = useState({ left: false, right: true })
+
+  const updateScrollFade = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setScrollFade({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft < el.scrollWidth - el.clientWidth - 4,
+    })
+  }, [])
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    updateScrollFade()
+    el.addEventListener('scroll', updateScrollFade, { passive: true })
+    return () => el.removeEventListener('scroll', updateScrollFade)
+  }, [updateScrollFade, mobileTab])
 
   const handleMobileTab = useCallback((tab: 'design' | 'cake') => {
     setMobileTab(tab)
@@ -77,7 +96,7 @@ export default function Editor() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0">
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0 landscape-header">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🎂</span>
           <h1 className="text-base md:text-lg font-bold text-gray-800">케이크 도안 디자이너</h1>
@@ -86,7 +105,7 @@ export default function Editor() {
       </header>
 
       {/* 탭 바 (모바일 전용) */}
-      <div className="flex md:hidden shrink-0 bg-white border-b border-gray-200">
+      <div className="flex md:hidden shrink-0 bg-white border-b border-gray-200 landscape-hide">
         {[
           { id: 'design', label: '시안', icon: '✏️' },
           { id: 'cake',   label: '케이크', icon: '🎂' },
@@ -112,12 +131,11 @@ export default function Editor() {
         {/* ── 시안 패널 (DrawingPanel 단일 인스턴스) ── */}
         {/* 데스크탑: flex 컬럼으로 항상 표시 / 모바일: design 탭일 때만 표시 */}
         <div
-          className={`bg-white md:relative md:flex md:flex-col md:min-h-0 md:border-r md:border-gray-200 md:visible md:pointer-events-auto ${
+          className={`bg-white md:relative md:inset-auto md:w-3/5 md:min-w-0 md:flex md:flex-col md:min-h-0 md:border-r md:border-gray-200 md:visible md:pointer-events-auto md:overflow-visible ${
             mobileTab === 'design'
-              ? 'absolute inset-0 overflow-y-auto pb-16'
+              ? 'absolute inset-0 overflow-y-auto mobile-safe-bottom'
               : 'absolute inset-0 invisible pointer-events-none'
           }`}
-          style={{ flex: '1.8' }}
         >
           {/* 내부: 세로 툴바(데스크탑 전용) + 캔버스 */}
           <div className="flex gap-0 md:flex-1 md:min-h-0">
@@ -149,14 +167,13 @@ export default function Editor() {
         {/* ── 3D 미리보기 패널 ── */}
         {/* 데스크탑: flex 컬럼으로 항상 표시 / 모바일: cake 탭일 때만 표시 */}
         <div
-          className={`md:relative md:flex md:flex-col md:min-h-0 md:visible md:pointer-events-auto ${
+          className={`md:relative md:inset-auto md:w-2/5 md:min-w-0 md:flex md:flex-col md:min-h-0 md:visible md:pointer-events-auto ${
             mobileTab === 'cake'
               ? 'absolute inset-0 flex flex-col bg-gray-50'
               : 'absolute inset-0 invisible pointer-events-none'
           }`}
-          style={{ flex: '1.2' }}
         >
-          <div className="flex-1 p-4">
+          <div className="flex-1 min-h-0 p-4">
             <CakePreview3D
               topRef={topRef}
               sideRef={sideRef}
@@ -183,8 +200,15 @@ export default function Editor() {
       </div>
 
       {/* 하단 고정 바 (모바일 전용) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg h-16 flex items-center md:hidden">
-        <div className="flex items-center gap-2 overflow-x-auto px-3 w-full" style={{ scrollbarWidth: 'none' }}>
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg flex items-center md:hidden landscape-compact-bar"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        {/* 좌측 그라디언트 */}
+        {scrollFade.left && (
+          <div className="absolute left-0 top-0 h-16 w-6 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
+        )}
+        <div ref={scrollRef} className="flex items-center gap-2 overflow-x-auto px-3 w-full h-16" style={{ scrollbarWidth: 'none' }}>
           {mobileTab === 'design' && (
             <>
               <Toolbar {...toolbarProps} horizontal />
@@ -201,6 +225,10 @@ export default function Editor() {
             <span>저장</span>
           </button>
         </div>
+        {/* 우측 그라디언트 */}
+        {scrollFade.right && (
+          <div className="absolute right-0 top-0 h-16 w-6 z-10 pointer-events-none bg-gradient-to-l from-white to-transparent" />
+        )}
       </div>
 
       {/* Footer (데스크탑 전용) */}

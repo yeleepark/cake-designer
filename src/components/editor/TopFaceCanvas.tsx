@@ -6,6 +6,7 @@ import type Konva from 'konva'
 import type { Tool, CakeShape, LineData, FillSnapshot, StampType, StampData } from '@/types/cake'
 
 interface Props {
+  containerWidth: number
   stageRef: React.RefObject<Konva.Stage | null>
   tool: Tool
   brushColor: string
@@ -25,6 +26,7 @@ interface Props {
   onSnapshotsChange: React.Dispatch<React.SetStateAction<FillSnapshot[]>>
   onBeforeAction: () => void
   onUpdate?: () => void
+  onUndo?: () => void
 }
 
 const CANVAS_SIZE = 300
@@ -93,6 +95,7 @@ function drawConfetti(ctx: CanvasRenderingContext2D, size: number) {
 }
 
 export default function TopFaceCanvas({
+  containerWidth,
   stageRef,
   tool,
   brushColor,
@@ -112,13 +115,19 @@ export default function TopFaceCanvas({
   onSnapshotsChange,
   onBeforeAction,
   onUpdate,
+  onUndo,
 }: Props) {
+  const vibrate = useCallback((ms = 10) => {
+    try { navigator?.vibrate?.(ms) } catch {}
+  }, [])
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
   const isLineMode = useRef(false)
   const currentId = useRef<string | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
   const onBeforeActionRef = useRef(onBeforeAction)
+  const isPinching = useRef(false)
+  const twoFingerStart = useRef<number>(0)
 
   useEffect(() => {
     onBeforeActionRef.current = onBeforeAction
@@ -234,6 +243,7 @@ export default function TopFaceCanvas({
 
       if (tool === 'stamp') {
         onBeforeActionRef.current()
+        vibrate()
         onStampsChange((prev) => [
           ...prev,
           { id: `stamp-${Date.now()}`, type: stampType, x: pos.x, y: pos.y, size: stampSize, color: stampColor },
@@ -260,7 +270,7 @@ export default function TopFaceCanvas({
         },
       ])
     },
-    [tool, brushColor, lineColor, size, stampColor, stampType, stampSize, floodFill, onLinesChange, onStampsChange, notifyUpdate]
+    [tool, brushColor, lineColor, size, stampColor, stampType, stampSize, floodFill, vibrate, onLinesChange, onStampsChange, notifyUpdate]
   )
 
   const handleMouseMove = useCallback(
@@ -307,6 +317,13 @@ export default function TopFaceCanvas({
 
   const handleTouchStart = useCallback(
     (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (e.evt.touches.length >= 2) {
+        isPinching.current = true
+        twoFingerStart.current = Date.now()
+        return
+      }
+      if (isPinching.current) return
+
       const pos = e.target.getStage()?.getPointerPosition()
       if (!pos) return
 
@@ -317,6 +334,7 @@ export default function TopFaceCanvas({
 
       if (tool === 'stamp') {
         onBeforeActionRef.current()
+        vibrate()
         onStampsChange((prev) => [
           ...prev,
           { id: `stamp-${Date.now()}`, type: stampType, x: pos.x, y: pos.y, size: stampSize, color: stampColor },
@@ -344,11 +362,12 @@ export default function TopFaceCanvas({
         },
       ])
     },
-    [tool, brushColor, lineColor, size, stampColor, stampType, stampSize, floodFill, onLinesChange, onStampsChange, notifyUpdate]
+    [tool, brushColor, lineColor, size, stampColor, stampType, stampSize, floodFill, vibrate, onLinesChange, onStampsChange, notifyUpdate]
   )
 
   const handleTouchMove = useCallback(
     (e: Konva.KonvaEventObject<TouchEvent>) => {
+      if (isPinching.current) return
       const pos = e.target.getStage()?.getPointerPosition()
       if (!pos) return
 
@@ -376,12 +395,20 @@ export default function TopFaceCanvas({
     [onLinesChange]
   )
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: Konva.KonvaEventObject<TouchEvent>) => {
+    if (isPinching.current && e.evt.touches.length === 0) {
+      const elapsed = Date.now() - twoFingerStart.current
+      isPinching.current = false
+      if (elapsed < 300) {
+        onUndo?.()
+      }
+      return
+    }
     isDrawing.current = false
     currentId.current = null
     setCursor(null)
     notifyUpdate()
-  }, [notifyUpdate])
+  }, [notifyUpdate, onUndo])
 
   const handleMouseUp = useCallback(() => {
     isDrawing.current = false
@@ -390,13 +417,28 @@ export default function TopFaceCanvas({
   }, [notifyUpdate])
 
   const clipFunc = getClipFunc(cakeShape)
+  const scale = containerWidth > 0 ? Math.min(1, containerWidth / CANVAS_SIZE) : 1
 
   return (
     <div className="flex flex-col items-center">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
         윗면 {cakeShape === 'circle' ? '(원형)' : '(사각형)'}
       </p>
-      <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white">
+      <div
+        style={{
+          width: CANVAS_SIZE * scale,
+          height: CANVAS_SIZE * scale,
+        }}
+      >
+      <div
+        className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white"
+        style={{
+          width: CANVAS_SIZE,
+          height: CANVAS_SIZE,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
         <Stage
           ref={stageRef}
           width={CANVAS_SIZE}
@@ -503,6 +545,7 @@ export default function TopFaceCanvas({
             }}
           />
         )}
+      </div>
       </div>
     </div>
   )
