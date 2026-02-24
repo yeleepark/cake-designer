@@ -1,4 +1,4 @@
-export type Tool = 'brush' | 'eraser' | 'fill'
+export type Tool = 'brush' | 'eraser' | 'fill' | 'line'
 
 export type CakeShape = 'circle' | 'square'
 

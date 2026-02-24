@@ -41,6 +41,7 @@ export default function SideFaceCanvas({
 }: Props) {
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
+  const isLineMode = useRef(false)
   const currentId = useRef<string | null>(null)
   const startPos = useRef<{ x: number; y: number } | null>(null)
   const onBeforeActionRef = useRef(onBeforeAction)
@@ -62,6 +63,7 @@ export default function SideFaceCanvas({
 
       onBeforeActionRef.current()
       isDrawing.current = true
+      isLineMode.current = tool === 'line'
       startPos.current = { x: pos.x, y: pos.y }
       const id = `line-${Date.now()}`
       currentId.current = id
@@ -70,7 +72,7 @@ export default function SideFaceCanvas({
         ...prev,
         {
           id,
-          points: [pos.x, pos.y],
+          points: [pos.x, pos.y, pos.x, pos.y],
           stroke: tool === 'eraser' ? '#ffffff' : color,
           strokeWidth: size,
           globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
@@ -88,7 +90,15 @@ export default function SideFaceCanvas({
       setCursor({ x: pos.x, y: pos.y })
 
       if (!isDrawing.current || !currentId.current) return
-      if (e.evt.shiftKey && startPos.current) {
+      if (isLineMode.current && startPos.current) {
+        onLinesChange((prev) =>
+          prev.map((l) =>
+            l.id === currentId.current
+              ? { ...l, points: [startPos.current!.x, startPos.current!.y, pos.x, pos.y] }
+              : l
+          )
+        )
+      } else if (e.evt.shiftKey && startPos.current) {
         onLinesChange((prev) =>
           prev.map((l) =>
             l.id === currentId.current
@@ -126,6 +136,7 @@ export default function SideFaceCanvas({
 
       onBeforeActionRef.current()
       isDrawing.current = true
+      isLineMode.current = tool === 'line'
       startPos.current = { x: pos.x, y: pos.y }
       const id = `line-${Date.now()}`
       currentId.current = id
@@ -135,7 +146,7 @@ export default function SideFaceCanvas({
         ...prev,
         {
           id,
-          points: [pos.x, pos.y],
+          points: [pos.x, pos.y, pos.x, pos.y],
           stroke: tool === 'eraser' ? '#ffffff' : color,
           strokeWidth: size,
           globalCompositeOperation: tool === 'eraser' ? 'destination-out' : 'source-over',
@@ -153,13 +164,23 @@ export default function SideFaceCanvas({
       setCursor(pos)
 
       if (!isDrawing.current || !currentId.current) return
-      onLinesChange((prev) =>
-        prev.map((l) =>
-          l.id === currentId.current
-            ? { ...l, points: [...l.points, pos.x, pos.y] }
-            : l
+      if (isLineMode.current && startPos.current) {
+        onLinesChange((prev) =>
+          prev.map((l) =>
+            l.id === currentId.current
+              ? { ...l, points: [startPos.current!.x, startPos.current!.y, pos.x, pos.y] }
+              : l
+          )
         )
-      )
+      } else {
+        onLinesChange((prev) =>
+          prev.map((l) =>
+            l.id === currentId.current
+              ? { ...l, points: [...l.points, pos.x, pos.y] }
+              : l
+          )
+        )
+      }
     },
     [onLinesChange]
   )
@@ -188,7 +209,7 @@ export default function SideFaceCanvas({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          style={{ cursor: 'none', touchAction: 'none' }}
+          style={{ cursor: tool === 'line' ? 'crosshair' : 'none', touchAction: 'none' }}
         >
           {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
           <Layer listening={false}>

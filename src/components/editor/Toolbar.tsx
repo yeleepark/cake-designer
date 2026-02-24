@@ -6,6 +6,7 @@ import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal'
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill'
 import FormatPaintIcon from '@mui/icons-material/FormatPaint'
 import UndoIcon from '@mui/icons-material/Undo'
+import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule'
 import type { Tool } from '@/types/cake'
 
 interface Props {
@@ -32,6 +33,7 @@ const PRESET_COLORS = [
 
 const TOOLS: { value: Tool; icon: React.ReactNode; title: string }[] = [
   { value: 'brush', icon: <BrushIcon fontSize="small" />, title: '브러쉬' },
+  { value: 'line', icon: <HorizontalRuleIcon fontSize="small" />, title: '직선' },
   { value: 'eraser', icon: <AutoFixNormalIcon fontSize="small" />, title: '지우개' },
   { value: 'fill', icon: <FormatColorFillIcon fontSize="small" />, title: '채우기' },
 ]
@@ -80,15 +82,15 @@ export default function Toolbar({
   }, [])
 
   const handleToolClick = (tool: Tool) => {
-    if ((tool === 'brush' || tool === 'eraser') && value === tool) {
+    if ((tool === 'brush' || tool === 'eraser' || tool === 'line') && value === tool) {
       setPopupOpen((o) => !o)
     } else {
       onChange(tool)
-      setPopupOpen(tool === 'brush' || tool === 'eraser')
+      setPopupOpen(tool === 'brush' || tool === 'eraser' || tool === 'line')
     }
   }
 
-  const showPopup = popupOpen && (value === 'brush' || value === 'eraser')
+  const showPopup = popupOpen && (value === 'brush' || value === 'eraser' || value === 'line')
 
   // 팝업 위치: 세로 모드는 오른쪽, 가로(모바일) 모드는 위쪽
   const popupPositionClass = horizontal
@@ -111,7 +113,7 @@ export default function Toolbar({
 
       {TOOLS.map((tool) => {
         const isActive = value === tool.value
-        const isAnchor = isActive && (tool.value === 'brush' || tool.value === 'eraser')
+        const isAnchor = isActive && (tool.value === 'brush' || tool.value === 'eraser' || tool.value === 'line')
 
         return (
           <button
@@ -122,7 +124,7 @@ export default function Toolbar({
             className={btnClass(isActive)}
           >
             {tool.icon}
-            {tool.value === 'brush' && (
+            {(tool.value === 'brush' || tool.value === 'line') && (
               <span
                 className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
                 style={{ backgroundColor: color }}
@@ -222,7 +224,7 @@ export default function Toolbar({
         <div ref={popupRef} className={popupPositionClass}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-700">
-              {value === 'brush' ? '브러쉬 설정' : '지우개 크기'}
+              {value === 'brush' ? '브러쉬 설정' : value === 'line' ? '직선 설정' : '지우개 크기'}
             </p>
             <button
               onClick={() => setPopupOpen(false)}
@@ -232,7 +234,7 @@ export default function Toolbar({
             </button>
           </div>
 
-          {value === 'brush' && (
+          {(value === 'brush' || value === 'line') && (
             <div className="mb-4">
               <p className="text-xs text-gray-500 mb-2">색상</p>
               <div className="grid grid-cols-5 gap-1.5 mb-2">
