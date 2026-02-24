@@ -202,7 +202,7 @@ export default function TopFaceCanvas({
         }
       }
 
-      // 칠해진 픽셀만 저장 (나머지 투명) — 바탕색 변경 시 뒤 rect가 정확히 보이도록
+      // 칠해진 픽셀만 저장 (나머지 투명)
       const fillCanvas = document.createElement('canvas')
       fillCanvas.width = w
       fillCanvas.height = h
@@ -220,15 +220,38 @@ export default function TopFaceCanvas({
       }
       fillCtx.putImageData(fillImageData, 0, 0)
 
-      const dataUrl = fillCanvas.toDataURL()
-      const img = new window.Image()
-      img.onload = () => {
-        onSnapshotsChange((prev) => [...prev, { id: `snapshot-${Date.now()}`, imageEl: img }])
-        notifyUpdate()
+      // 지우개(destination-out) 라인이 채우기 스냅샷을 지우는 것을 방지:
+      // 그리기 그룹의 현재 합성 상태를 플래튼하고 채우기 결과를 합쳐 단일 스냅샷으로 저장
+      const drawingLayer = stage.getLayers()[1]
+      const drawingGroup = drawingLayer?.children?.[0]
+
+      if (drawingGroup) {
+        const groupCanvas = (drawingGroup as Konva.Group).toCanvas({
+          pixelRatio: 1, x: 0, y: 0, width: CANVAS_SIZE, height: CANVAS_SIZE,
+        })
+        const groupCtx = groupCanvas.getContext('2d')!
+        groupCtx.drawImage(fillCanvas, 0, 0)
+
+        const combinedUrl = groupCanvas.toDataURL()
+        const combinedImg = new window.Image()
+        combinedImg.onload = () => {
+          onLinesChange([])
+          onStampsChange([])
+          onSnapshotsChange([{ id: `snapshot-${Date.now()}`, imageEl: combinedImg }])
+          notifyUpdate()
+        }
+        combinedImg.src = combinedUrl
+      } else {
+        const dataUrl = fillCanvas.toDataURL()
+        const img = new window.Image()
+        img.onload = () => {
+          onSnapshotsChange((prev) => [...prev, { id: `snapshot-${Date.now()}`, imageEl: img }])
+          notifyUpdate()
+        }
+        img.src = dataUrl
       }
-      img.src = dataUrl
     },
-    [fillColor, stageRef, notifyUpdate, onSnapshotsChange]
+    [fillColor, stageRef, notifyUpdate, onSnapshotsChange, onLinesChange, onStampsChange]
   )
 
   const handleMouseDown = useCallback(
