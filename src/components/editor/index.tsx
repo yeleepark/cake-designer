@@ -170,9 +170,9 @@ export default function Editor() {
         {/* ── 3D 미리보기 패널 ── */}
         {/* 데스크탑: flex 컬럼으로 항상 표시 / 모바일: cake 탭일 때만 표시 */}
         <div
-          className={`md:relative md:inset-auto md:w-2/5 md:min-w-0 md:flex md:flex-col md:min-h-0 md:visible md:pointer-events-auto ${
+          className={`md:relative md:inset-auto md:w-2/5 md:min-w-0 md:flex md:flex-col md:min-h-0 md:visible md:pointer-events-auto md:bg-gray-100 ${
             mobileTab === 'cake'
-              ? 'absolute inset-0 flex flex-col bg-gray-50'
+              ? 'absolute inset-0 flex flex-col bg-gray-100'
               : 'absolute inset-0 invisible pointer-events-none'
           }`}
         >
@@ -215,11 +215,11 @@ export default function Editor() {
           {mobileTab === 'design' && (
             <>
               <Toolbar {...toolbarProps} horizontal />
-              <div className="h-8 w-px bg-gray-200 shrink-0" />
+              <div className="h-8 w-px bg-gray-100 shrink-0" />
             </>
           )}
           <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} compact />
-          <div className="h-8 w-px bg-gray-200 shrink-0" />
+          <div className="h-8 w-px bg-gray-100 shrink-0" />
           <button
             onClick={exportToPNG}
             className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"

@@ -477,7 +477,7 @@ export default function TopFaceCanvas({
         >
           {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
           <Layer listening={false}>
-            <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="#fdf4ff" />
+            <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="#f1f2f4" />
             <Group clipFunc={clipFunc as never}>
               <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill={baseColor} />
             </Group>
@@ -527,30 +527,6 @@ export default function TopFaceCanvas({
               ))}
             </Group>
 
-            {/* 케이크 윤곽선 */}
-            {cakeShape === 'circle' && (
-              <Circle
-                x={CANVAS_SIZE / 2}
-                y={CANVAS_SIZE / 2}
-                radius={RADIUS}
-                stroke="#d1d5db"
-                strokeWidth={2}
-                fill="transparent"
-                listening={false}
-              />
-            )}
-            {cakeShape === 'square' && (
-              <Rect
-                x={CANVAS_SIZE / 2 - RADIUS}
-                y={CANVAS_SIZE / 2 - RADIUS}
-                width={RADIUS * 2}
-                height={RADIUS * 2}
-                stroke="#d1d5db"
-                strokeWidth={2}
-                fill="transparent"
-                listening={false}
-              />
-            )}
           </Layer>
         </Stage>
         {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 (texture 캡처에서 제외) */}

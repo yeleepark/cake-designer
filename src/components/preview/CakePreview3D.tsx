@@ -12,7 +12,7 @@ const TOP_RADIUS = 130
 const CROP_SIZE = TOP_RADIUS * 2                        // 260
 const CROP_OFFSET = (TOP_CANVAS_SIZE - CROP_SIZE) / 2  // 20
 const TEX_SCALE = 3                                     // 텍스처 업스케일 배율
-const PLATE_COLOR = '#f9fafb'
+const PLATE_COLOR = '#f1f2f4'
 
 function cropTopCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElement {
   const outW = CROP_SIZE * TEX_SCALE
@@ -107,15 +107,15 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
   return (
     <group>
       {cakeShape === 'circle' && (
-        <mesh castShadow receiveShadow>
+        <mesh castShadow>
           <cylinderGeometry args={[radius, radius, height, 64]} />
-          <meshStandardMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} />
+          <meshBasicMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} />
         </mesh>
       )}
       {cakeShape === 'square' && (
-        <mesh castShadow receiveShadow>
+        <mesh castShadow>
           <boxGeometry args={[radius * 1.8, height, radius * 1.8]} />
-          <meshStandardMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} />
+          <meshBasicMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} />
         </mesh>
       )}
 
@@ -211,6 +211,7 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
         dpr={[1, maxDpr]}
         camera={{ position: [0, 2.5, 5], fov: 45 }}
         shadows
+        flat
         gl={{
           antialias: true,
           powerPreference: 'high-performance',

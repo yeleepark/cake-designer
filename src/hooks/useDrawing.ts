@@ -11,7 +11,7 @@ export function useDrawing() {
   const [fillColor, setFillColor] = useState('#FF6B81')
   const [size, setSize] = useState(8)
   const [cakeShape, setCakeShape] = useState<CakeShape>('circle')
-  const [baseColor, setBaseColor] = useState('#ffffff')
+  const [baseColor, setBaseColor] = useState('#fffef9')
   const [stampColor, setStampColor] = useState('#FF6B81')
   const [stampType, setStampType] = useState<StampType>('heart')
   const [stampSize, setStampSize] = useState(24)
