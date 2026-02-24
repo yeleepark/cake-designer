@@ -19,7 +19,7 @@ const CakePreview3D = dynamic(() => import('@/components/preview/CakePreview3D')
 })
 
 export default function Editor() {
-  const { tool, setTool, brushColor, setBrushColor, lineColor, setLineColor, fillColor, setFillColor, size, setSize, cakeShape, setCakeShape, baseColor, setBaseColor, topRef, sideRef } =
+  const { tool, setTool, brushColor, setBrushColor, lineColor, setLineColor, fillColor, setFillColor, size, setSize, cakeShape, setCakeShape, baseColor, setBaseColor, stampColor, setStampColor, stampType, setStampType, stampSize, setStampSize, topRef, sideRef } =
     useDrawing()
   const threeCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const { exportToPNG } = useExport(topRef, sideRef, threeCanvasRef)
@@ -64,6 +64,12 @@ export default function Editor() {
     onSizeChange: setSize,
     baseColor,
     onBaseColorChange: setBaseColor,
+    stampColor,
+    onStampColorChange: setStampColor,
+    stampType,
+    onStampTypeChange: setStampType,
+    stampSize,
+    onStampSizeChange: setStampSize,
     onUndo: () => drawingPanelRef.current?.undo(),
     canUndo,
   }
@@ -128,6 +134,9 @@ export default function Editor() {
                 size={size}
                 cakeShape={cakeShape}
                 baseColor={baseColor}
+                stampColor={stampColor}
+                stampType={stampType}
+                stampSize={stampSize}
                 topRef={topRef}
                 sideRef={sideRef}
                 onUndoChange={setCanUndo}

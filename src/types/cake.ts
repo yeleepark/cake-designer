@@ -1,6 +1,17 @@
-export type Tool = 'brush' | 'eraser' | 'fill' | 'line'
+export type Tool = 'brush' | 'eraser' | 'fill' | 'line' | 'stamp'
 
 export type CakeShape = 'circle' | 'square'
+
+export type StampType = 'heart' | 'star' | 'confetti'
+
+export interface StampData {
+  id: string
+  type: StampType
+  x: number
+  y: number
+  size: number
+  color: string
+}
 
 export interface DrawingState {
   tool: Tool

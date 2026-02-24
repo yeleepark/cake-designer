@@ -2,13 +2,14 @@
 
 import { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
 import type Konva from 'konva'
-import type { Tool, CakeShape, LineData, FillSnapshot } from '@/types/cake'
+import type { Tool, CakeShape, LineData, FillSnapshot, StampType, StampData } from '@/types/cake'
 import TopFaceCanvas from './TopFaceCanvas'
 import SideFaceCanvas from './SideFaceCanvas'
 
 interface HistoryEntry {
   topLines: LineData[]
   topSnapshots: FillSnapshot[]
+  topStamps: StampData[]
   sideLines: LineData[]
 }
 
@@ -24,6 +25,9 @@ interface Props {
   size: number
   cakeShape: CakeShape
   baseColor: string
+  stampColor: string
+  stampType: StampType
+  stampSize: number
   topRef: React.RefObject<Konva.Stage | null>
   sideRef: React.RefObject<Konva.Stage | null>
   onUndoChange?: (canUndo: boolean) => void
@@ -31,11 +35,12 @@ interface Props {
 }
 
 const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel(
-  { tool, brushColor, lineColor, fillColor, size, cakeShape, baseColor, topRef, sideRef, onUndoChange, onUpdate },
+  { tool, brushColor, lineColor, fillColor, size, cakeShape, baseColor, stampColor, stampType, stampSize, topRef, sideRef, onUndoChange, onUpdate },
   ref
 ) {
   const [topLines, setTopLines] = useState<LineData[]>([])
   const [topSnapshots, setTopSnapshots] = useState<FillSnapshot[]>([])
+  const [topStamps, setTopStamps] = useState<StampData[]>([])
   const [sideLines, setSideLines] = useState<LineData[]>([])
 
   // history는 ref로 관리 (불필요한 리렌더 방지)
@@ -44,15 +49,18 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
   // 최신 상태를 ref로 추적 (pushHistory 클로저에서 항상 최신 값 사용)
   const topLinesRef = useRef(topLines)
   const topSnapshotsRef = useRef(topSnapshots)
+  const topStampsRef = useRef(topStamps)
   const sideLinesRef = useRef(sideLines)
   topLinesRef.current = topLines
   topSnapshotsRef.current = topSnapshots
+  topStampsRef.current = topStamps
   sideLinesRef.current = sideLines
 
   const pushHistory = useCallback(() => {
     history.current.push({
       topLines: [...topLinesRef.current],
       topSnapshots: [...topSnapshotsRef.current],
+      topStamps: [...topStampsRef.current],
       sideLines: [...sideLinesRef.current],
     })
     onUndoChange?.(true)
@@ -63,6 +71,7 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
     const prev = history.current.pop()!
     setTopLines(prev.topLines)
     setTopSnapshots(prev.topSnapshots)
+    setTopStamps(prev.topStamps)
     setSideLines(prev.sideLines)
     onUndoChange?.(history.current.length > 0)
     setTimeout(() => onUpdate?.(), 50)
@@ -81,6 +90,11 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
         size={size}
         cakeShape={cakeShape}
         baseColor={baseColor}
+        stampColor={stampColor}
+        stampType={stampType}
+        stampSize={stampSize}
+        stamps={topStamps}
+        onStampsChange={setTopStamps}
         lines={topLines}
         snapshots={topSnapshots}
         onLinesChange={setTopLines}

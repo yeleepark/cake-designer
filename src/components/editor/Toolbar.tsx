@@ -7,7 +7,8 @@ import FormatColorFillIcon from '@mui/icons-material/FormatColorFill'
 import FormatPaintIcon from '@mui/icons-material/FormatPaint'
 import UndoIcon from '@mui/icons-material/Undo'
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule'
-import type { Tool } from '@/types/cake'
+import StarsIcon from '@mui/icons-material/Stars'
+import type { Tool, StampType } from '@/types/cake'
 
 interface Props {
   value: Tool
@@ -22,6 +23,12 @@ interface Props {
   onSizeChange: (size: number) => void
   baseColor: string
   onBaseColorChange: (color: string) => void
+  stampColor: string
+  onStampColorChange: (color: string) => void
+  stampType: StampType
+  onStampTypeChange: (type: StampType) => void
+  stampSize: number
+  onStampSizeChange: (size: number) => void
   onUndo?: () => void
   canUndo?: boolean
   /** 모바일 하단 바에서 사용할 가로 배치 모드 */
@@ -40,6 +47,13 @@ const TOOLS: { value: Tool; icon: React.ReactNode; title: string }[] = [
   { value: 'line', icon: <HorizontalRuleIcon fontSize="small" />, title: '직선' },
   { value: 'eraser', icon: <AutoFixNormalIcon fontSize="small" />, title: '지우개' },
   { value: 'fill', icon: <FormatColorFillIcon fontSize="small" />, title: '채우기' },
+  { value: 'stamp', icon: <StarsIcon fontSize="small" />, title: '스탬프' },
+]
+
+const STAMP_TYPES: { value: StampType; label: string }[] = [
+  { value: 'heart', label: '❤️' },
+  { value: 'star', label: '⭐' },
+  { value: 'confetti', label: '🎊' },
 ]
 
 export default function Toolbar({
@@ -55,6 +69,12 @@ export default function Toolbar({
   onSizeChange,
   baseColor,
   onBaseColorChange,
+  stampColor,
+  onStampColorChange,
+  stampType,
+  onStampTypeChange,
+  stampSize,
+  onStampSizeChange,
   onUndo,
   canUndo,
   horizontal = false,
@@ -89,16 +109,18 @@ export default function Toolbar({
     }
   }, [])
 
+  const hasPopup = (t: Tool) => t === 'brush' || t === 'eraser' || t === 'line' || t === 'fill' || t === 'stamp'
+
   const handleToolClick = (tool: Tool) => {
-    if ((tool === 'brush' || tool === 'eraser' || tool === 'line' || tool === 'fill') && value === tool) {
+    if (hasPopup(tool) && value === tool) {
       setPopupOpen((o) => !o)
     } else {
       onChange(tool)
-      setPopupOpen(tool === 'brush' || tool === 'eraser' || tool === 'line' || tool === 'fill')
+      setPopupOpen(hasPopup(tool))
     }
   }
 
-  const showPopup = popupOpen && (value === 'brush' || value === 'eraser' || value === 'line' || value === 'fill')
+  const showPopup = popupOpen && hasPopup(value)
 
   // 팝업 위치: 세로 모드는 오른쪽, 가로(모바일) 모드는 위쪽
   const popupPositionClass = horizontal
@@ -121,7 +143,7 @@ export default function Toolbar({
 
       {TOOLS.map((tool) => {
         const isActive = value === tool.value
-        const isAnchor = isActive && (tool.value === 'brush' || tool.value === 'eraser' || tool.value === 'line' || tool.value === 'fill')
+        const isAnchor = isActive && hasPopup(tool.value)
 
         return (
           <button
@@ -148,6 +170,12 @@ export default function Toolbar({
               <span
                 className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
                 style={{ backgroundColor: fillColor }}
+              />
+            )}
+            {tool.value === 'stamp' && (
+              <span
+                className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
+                style={{ backgroundColor: stampColor }}
               />
             )}
           </button>
@@ -244,7 +272,7 @@ export default function Toolbar({
         <div ref={popupRef} className={popupPositionClass}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-700">
-              {value === 'brush' ? '브러쉬 설정' : value === 'line' ? '직선 설정' : value === 'fill' ? '채우기 색상' : '지우개 크기'}
+              {value === 'brush' ? '브러쉬 설정' : value === 'line' ? '직선 설정' : value === 'fill' ? '채우기 색상' : value === 'stamp' ? '스탬프 설정' : '지우개 크기'}
             </p>
             <button
               onClick={() => setPopupOpen(false)}
@@ -331,6 +359,63 @@ export default function Toolbar({
                   className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
                 />
                 <span className="text-xs font-mono text-gray-500">{fillColor}</span>
+              </div>
+            </div>
+          )}
+
+          {value === 'stamp' && (
+            <div>
+              <p className="text-xs text-gray-500 mb-2">모양</p>
+              <div className="flex gap-2 mb-4">
+                {STAMP_TYPES.map((s) => (
+                  <button
+                    key={s.value}
+                    onClick={() => onStampTypeChange(s.value)}
+                    className={`w-10 h-10 rounded-lg border-2 text-lg flex items-center justify-center transition-transform hover:scale-110 ${
+                      stampType === s.value ? 'border-violet-500 bg-violet-50 scale-110' : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mb-2">색상</p>
+              <div className="grid grid-cols-5 gap-1.5 mb-2">
+                {PRESET_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => onStampColorChange(c)}
+                    className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
+                      stampColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-1 mb-4">
+                <input
+                  type="color"
+                  value={stampColor}
+                  onChange={(e) => onStampColorChange(e.target.value)}
+                  className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
+                />
+                <span className="text-xs font-mono text-gray-500">{stampColor}</span>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-gray-500">크기</p>
+                <span className="text-xs font-semibold text-violet-600">{stampSize}px</span>
+              </div>
+              <input
+                type="range"
+                min={12}
+                max={60}
+                value={stampSize}
+                onChange={(e) => onStampSizeChange(Number(e.target.value))}
+                className="w-full accent-violet-500"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>12</span>
+                <span>60</span>
               </div>
             </div>
           )}

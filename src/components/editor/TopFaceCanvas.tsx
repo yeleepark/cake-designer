@@ -1,9 +1,9 @@
 'use client'
 
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { Stage, Layer, Line, Rect, Circle, Group, Image as KonvaImage } from 'react-konva'
+import { Stage, Layer, Line, Rect, Circle, Group, Image as KonvaImage, Shape } from 'react-konva'
 import type Konva from 'konva'
-import type { Tool, CakeShape, LineData, FillSnapshot } from '@/types/cake'
+import type { Tool, CakeShape, LineData, FillSnapshot, StampType, StampData } from '@/types/cake'
 
 interface Props {
   stageRef: React.RefObject<Konva.Stage | null>
@@ -14,6 +14,11 @@ interface Props {
   size: number
   cakeShape: CakeShape
   baseColor: string
+  stampColor: string
+  stampType: StampType
+  stampSize: number
+  stamps: StampData[]
+  onStampsChange: React.Dispatch<React.SetStateAction<StampData[]>>
   lines: LineData[]
   snapshots: FillSnapshot[]
   onLinesChange: React.Dispatch<React.SetStateAction<LineData[]>>
@@ -47,6 +52,46 @@ function getClipFunc(shape: CakeShape) {
   }
 }
 
+function drawHeart(ctx: CanvasRenderingContext2D, size: number) {
+  const s = size / 2
+  ctx.beginPath()
+  ctx.moveTo(0, s * 0.7)
+  // left half: bottom → left bump → top center dip
+  ctx.bezierCurveTo(-s * 0.55, s * 0.35, -s, -s * 0.1, -s * 0.5, -s * 0.5)
+  ctx.bezierCurveTo(-s * 0.15, -s * 0.8, 0, -s * 0.5, 0, -s * 0.2)
+  // right half: top center dip → right bump → bottom
+  ctx.bezierCurveTo(0, -s * 0.5, s * 0.15, -s * 0.8, s * 0.5, -s * 0.5)
+  ctx.bezierCurveTo(s, -s * 0.1, s * 0.55, s * 0.35, 0, s * 0.7)
+  ctx.closePath()
+}
+
+function drawStar(ctx: CanvasRenderingContext2D, size: number) {
+  const outer = size / 2
+  const inner = outer * 0.4
+  const spikes = 5
+  ctx.beginPath()
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outer : inner
+    const angle = (Math.PI / 2) * -1 + (Math.PI / spikes) * i
+    const x = Math.cos(angle) * r
+    const y = Math.sin(angle) * r
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+}
+
+function drawConfetti(ctx: CanvasRenderingContext2D, size: number) {
+  const w = size * 0.3
+  const h = size
+  ctx.save()
+  ctx.rotate(Math.PI / 6)
+  ctx.beginPath()
+  ctx.roundRect(-w / 2, -h / 2, w, h, w * 0.3)
+  ctx.closePath()
+  ctx.restore()
+}
+
 export default function TopFaceCanvas({
   stageRef,
   tool,
@@ -56,6 +101,11 @@ export default function TopFaceCanvas({
   size,
   cakeShape,
   baseColor,
+  stampColor,
+  stampType,
+  stampSize,
+  stamps,
+  onStampsChange,
   lines,
   snapshots,
   onLinesChange,
@@ -182,6 +232,16 @@ export default function TopFaceCanvas({
         return
       }
 
+      if (tool === 'stamp') {
+        onBeforeActionRef.current()
+        onStampsChange((prev) => [
+          ...prev,
+          { id: `stamp-${Date.now()}`, type: stampType, x: pos.x, y: pos.y, size: stampSize, color: stampColor },
+        ])
+        notifyUpdate()
+        return
+      }
+
       onBeforeActionRef.current()
       isDrawing.current = true
       isLineMode.current = tool === 'line'
@@ -200,7 +260,7 @@ export default function TopFaceCanvas({
         },
       ])
     },
-    [tool, brushColor, lineColor, size, floodFill, onLinesChange]
+    [tool, brushColor, lineColor, size, stampColor, stampType, stampSize, floodFill, onLinesChange, onStampsChange, notifyUpdate]
   )
 
   const handleMouseMove = useCallback(
@@ -255,6 +315,16 @@ export default function TopFaceCanvas({
         return
       }
 
+      if (tool === 'stamp') {
+        onBeforeActionRef.current()
+        onStampsChange((prev) => [
+          ...prev,
+          { id: `stamp-${Date.now()}`, type: stampType, x: pos.x, y: pos.y, size: stampSize, color: stampColor },
+        ])
+        notifyUpdate()
+        return
+      }
+
       onBeforeActionRef.current()
       isDrawing.current = true
       isLineMode.current = tool === 'line'
@@ -274,7 +344,7 @@ export default function TopFaceCanvas({
         },
       ])
     },
-    [tool, brushColor, lineColor, size, floodFill, onLinesChange]
+    [tool, brushColor, lineColor, size, stampColor, stampType, stampSize, floodFill, onLinesChange, onStampsChange, notifyUpdate]
   )
 
   const handleTouchMove = useCallback(
@@ -338,7 +408,7 @@ export default function TopFaceCanvas({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          style={{ cursor: (tool === 'fill' || tool === 'line') ? 'crosshair' : 'none', touchAction: 'none' }}
+          style={{ cursor: (tool === 'fill' || tool === 'line' || tool === 'stamp') ? 'crosshair' : 'none', touchAction: 'none' }}
         >
           {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
           <Layer listening={false}>
@@ -372,6 +442,22 @@ export default function TopFaceCanvas({
                   lineCap="round"
                   lineJoin="round"
                   globalCompositeOperation={line.globalCompositeOperation}
+                />
+              ))}
+
+              {stamps.map((stamp) => (
+                <Shape
+                  key={stamp.id}
+                  x={stamp.x}
+                  y={stamp.y}
+                  fill={stamp.color}
+                  listening={false}
+                  sceneFunc={(ctx, shape) => {
+                    if (stamp.type === 'heart') drawHeart(ctx as unknown as CanvasRenderingContext2D, stamp.size)
+                    else if (stamp.type === 'star') drawStar(ctx as unknown as CanvasRenderingContext2D, stamp.size)
+                    else drawConfetti(ctx as unknown as CanvasRenderingContext2D, stamp.size)
+                    ctx.fillStrokeShape(shape)
+                  }}
                 />
               ))}
             </Group>
