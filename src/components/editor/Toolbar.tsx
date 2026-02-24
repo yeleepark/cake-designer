@@ -8,6 +8,9 @@ import FormatPaintIcon from '@mui/icons-material/FormatPaint'
 import UndoIcon from '@mui/icons-material/Undo'
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule'
 import StarsIcon from '@mui/icons-material/Stars'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import StarIcon from '@mui/icons-material/Star'
+import CelebrationIcon from '@mui/icons-material/Celebration'
 import type { Tool, StampType } from '@/types/cake'
 
 interface Props {
@@ -50,10 +53,10 @@ const TOOLS: { value: Tool; icon: React.ReactNode; title: string }[] = [
   { value: 'stamp', icon: <StarsIcon fontSize="small" />, title: '스탬프' },
 ]
 
-const STAMP_TYPES: { value: StampType; label: string }[] = [
-  { value: 'heart', label: '❤️' },
-  { value: 'star', label: '⭐' },
-  { value: 'confetti', label: '🎊' },
+const STAMP_TYPES: { value: StampType; label: React.ReactNode }[] = [
+  { value: 'heart', label: <FavoriteIcon sx={{ fontSize: 20 }} /> },
+  { value: 'star', label: <StarIcon sx={{ fontSize: 20 }} /> },
+  { value: 'confetti', label: <CelebrationIcon sx={{ fontSize: 20 }} /> },
 ]
 
 export default function Toolbar({

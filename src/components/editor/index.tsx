@@ -5,6 +5,9 @@ import type { CakeShape } from '@/types/cake'
 import dynamic from 'next/dynamic'
 import { useDrawing } from '@/hooks/useDrawing'
 import { useExport } from '@/hooks/useExport'
+import CakeIcon from '@mui/icons-material/Cake'
+import EditIcon from '@mui/icons-material/Edit'
+import DownloadIcon from '@mui/icons-material/Download'
 import Toolbar from './Toolbar'
 import CakeShapeSelector from './CakeShapeSelector'
 import DrawingPanel, { type DrawingPanelHandle } from './DrawingPanel'
@@ -98,7 +101,7 @@ export default function Editor() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0 landscape-header">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">🎂</span>
+          <CakeIcon sx={{ fontSize: 28 }} className="text-violet-500" />
           <h1 className="text-base md:text-lg font-bold text-gray-800">케이크 도안 디자이너</h1>
         </div>
         <p className="hidden md:block text-xs text-gray-400">브러쉬로 그리고 3D 미리보기를 확인하세요</p>
@@ -106,10 +109,10 @@ export default function Editor() {
 
       {/* 탭 바 (모바일 전용) */}
       <div className="flex md:hidden shrink-0 bg-white border-b border-gray-200 landscape-hide">
-        {[
-          { id: 'design', label: '시안', icon: '✏️' },
-          { id: 'cake',   label: '케이크', icon: '🎂' },
-        ].map((tab) => (
+        {([
+          { id: 'design', label: '시안', icon: <EditIcon sx={{ fontSize: 18 }} /> },
+          { id: 'cake',   label: '케이크', icon: <CakeIcon sx={{ fontSize: 18 }} /> },
+        ] as const).map((tab) => (
           <button
             key={tab.id}
             onClick={() => handleMobileTab(tab.id as 'design' | 'cake')}
@@ -119,7 +122,7 @@ export default function Editor() {
                 : 'border-transparent text-gray-400'
             }`}
           >
-            <span>{tab.icon}</span>
+            {tab.icon}
             <span>{tab.label}</span>
           </button>
         ))}
@@ -192,7 +195,7 @@ export default function Editor() {
               onClick={exportToPNG}
               className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
             >
-              <span>📥</span>
+              <DownloadIcon fontSize="small" />
               <span>PNG 저장</span>
             </button>
           </div>
@@ -221,7 +224,7 @@ export default function Editor() {
             onClick={exportToPNG}
             className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"
           >
-            <span>📥</span>
+            <DownloadIcon fontSize="small" />
             <span>저장</span>
           </button>
         </div>

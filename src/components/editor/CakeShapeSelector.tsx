@@ -1,6 +1,8 @@
 'use client'
 
 import type { CakeShape } from '@/types/cake'
+import CircleIcon from '@mui/icons-material/Circle'
+import CropSquareIcon from '@mui/icons-material/CropSquare'
 
 interface Props {
   value: CakeShape
@@ -8,9 +10,9 @@ interface Props {
   compact?: boolean
 }
 
-const SHAPES: { value: CakeShape; label: string; icon: string }[] = [
-  { value: 'circle', label: '원형', icon: '⬤' },
-  { value: 'square', label: '사각형', icon: '■' },
+const SHAPES: { value: CakeShape; label: string; icon: React.ReactNode }[] = [
+  { value: 'circle', label: '원형', icon: <CircleIcon sx={{ fontSize: 20 }} /> },
+  { value: 'square', label: '사각형', icon: <CropSquareIcon sx={{ fontSize: 20 }} /> },
 ]
 
 export default function CakeShapeSelector({ value, onChange, compact = false }: Props) {
@@ -23,7 +25,7 @@ export default function CakeShapeSelector({ value, onChange, compact = false }: 
           title={shape.label}
           className={`flex items-center justify-center rounded-xl border-2 font-medium transition-colors ${
             compact
-              ? 'w-12 h-12 text-base'
+              ? 'w-12 h-12'
               : 'flex-col gap-1 px-3 py-2 text-sm'
           } ${
             value === shape.value
@@ -31,7 +33,7 @@ export default function CakeShapeSelector({ value, onChange, compact = false }: 
               : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
           }`}
         >
-          <span className={compact ? 'leading-none' : 'text-lg leading-none'}>{shape.icon}</span>
+          {shape.icon}
           {!compact && <span>{shape.label}</span>}
         </button>
       ))}
