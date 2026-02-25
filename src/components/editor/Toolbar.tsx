@@ -164,7 +164,7 @@ export default function Toolbar({
   const toolBtnSx = (active: boolean) => ({
     width: horizontal ? 48 : 40,
     height: horizontal ? 48 : 40,
-    borderRadius: 3,
+    borderRadius: 1.5,
     border: 1,
     borderColor: active ? 'primary.main' : 'grey.200',
     bgcolor: active ? 'action.selected' : 'background.paper',
@@ -266,7 +266,7 @@ export default function Toolbar({
         onClose={() => setBaseColorAnchor(null)}
         anchorOrigin={{ vertical: horizontal ? 'top' : 'center', horizontal: horizontal ? 'center' : 'right' }}
         transformOrigin={{ vertical: horizontal ? 'bottom' : 'center', horizontal: horizontal ? 'center' : 'left' }}
-        slotProps={{ paper: { sx: { p: 2.5, width: 224, borderRadius: 4, border: 1, borderColor: 'divider' } } }}
+        slotProps={{ paper: { sx: { p: 2.5, width: 224, borderRadius: 2, border: 1, borderColor: 'divider' } } }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
           <Typography variant="subtitle2">바탕 색상</Typography>
@@ -284,7 +284,7 @@ export default function Toolbar({
         onClose={() => setPopupAnchor(null)}
         anchorOrigin={{ vertical: horizontal ? 'top' : 'center', horizontal: horizontal ? 'center' : 'right' }}
         transformOrigin={{ vertical: horizontal ? 'bottom' : 'center', horizontal: horizontal ? 'center' : 'left' }}
-        slotProps={{ paper: { sx: { p: 2.5, width: 224, borderRadius: 4, border: 1, borderColor: 'divider' } } }}
+        slotProps={{ paper: { sx: { p: 2.5, width: 224, borderRadius: 2, border: 1, borderColor: 'divider' } } }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
           <Typography variant="subtitle2">{popupTitle}</Typography>
