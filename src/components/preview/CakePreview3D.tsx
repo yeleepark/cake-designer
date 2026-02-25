@@ -15,7 +15,7 @@ const TOP_RADIUS = 130
 const CROP_SIZE = TOP_RADIUS * 2                        // 260
 const CROP_OFFSET = (TOP_CANVAS_SIZE - CROP_SIZE) / 2  // 20
 const TEX_SCALE = 3                                     // 텍스처 업스케일 배율
-const PLATE_COLOR = '#f0ece4'
+const PLATE_COLOR = '#f2e8d8'
 
 function cropTopCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElement {
   const outW = CROP_SIZE * TEX_SCALE
@@ -108,26 +108,26 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
       {cakeShape === 'circle' && (
         <mesh castShadow>
           <cylinderGeometry args={[radius, radius, height, 64]} />
-          <meshBasicMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} />
+          <meshStandardMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
         </mesh>
       )}
       {cakeShape === 'square' && (
         <mesh castShadow>
           <boxGeometry args={[radius * 1.8, height, radius * 1.8]} />
-          <meshBasicMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} />
+          <meshStandardMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
         </mesh>
       )}
 
       {cakeShape === 'circle' && (
         <mesh position={[0, height / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[radius, 64]} />
-          <meshBasicMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} />
+          <meshStandardMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
         </mesh>
       )}
       {cakeShape === 'square' && (
         <mesh position={[0, height / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[radius * 1.8, radius * 1.8]} />
-          <meshBasicMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} />
+          <meshStandardMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
         </mesh>
       )}
     </group>
@@ -210,8 +210,7 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
         dpr={[1, maxDpr]}
         camera={{ position: [0, 2.5, 5], fov: 45 }}
         shadows
-        flat
-        scene={{ background: new THREE.Color('#faf8f5') }}
+        scene={{ background: new THREE.Color('#f2e8d8') }}
         gl={{
           antialias: true,
           powerPreference: 'high-performance',
@@ -220,10 +219,11 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
         }}
       >
         <CanvasCapture canvasRef={canvasRef} />
-        <ambientLight intensity={0.6} />
+        <ambientLight intensity={0.4} />
+        {/* 메인 키 라이트 — 우측 상단에서 비춤 */}
         <directionalLight
-          position={[5, 8, 5]}
-          intensity={1.2}
+          position={[4, 6, 3]}
+          intensity={1.5}
           castShadow
           shadow-mapSize={[shadowSize, shadowSize]}
           shadow-camera-near={0.1}
@@ -233,7 +233,10 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
           shadow-camera-top={5}
           shadow-camera-bottom={-5}
         />
-        <directionalLight position={[-5, 3, -5]} intensity={0.4} />
+        {/* 필 라이트 — 반대편에서 그림자를 부드럽게 */}
+        <directionalLight position={[-3, 4, -2]} intensity={0.6} />
+        {/* 림 라이트 — 뒤쪽에서 윤곽을 강조 */}
+        <directionalLight position={[0, 3, -5]} intensity={0.8} />
 
         <CakeGroup
           topRef={topRef}

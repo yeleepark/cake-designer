@@ -6,7 +6,6 @@ import type Konva from 'konva'
 import type { Tool, CakeShape, LineData, FillSnapshot, StampType, StampData } from '@/types/cake'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import Paper from '@mui/material/Paper'
 
 interface Props {
   containerWidth: number
@@ -450,19 +449,13 @@ export default function TopFaceCanvas({
           height: CANVAS_SIZE * scale,
         }}
       >
-      <Paper
-        variant="outlined"
-        sx={{
+      <div
+        style={{
           position: 'relative',
-          borderRadius: 4,
-          overflow: 'hidden',
-          borderWidth: 1.5,
-          borderColor: 'grey.200',
           width: CANVAS_SIZE,
           height: CANVAS_SIZE,
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
-          bgcolor: 'background.paper',
         }}
       >
         <Stage
@@ -480,7 +473,7 @@ export default function TopFaceCanvas({
         >
           {/* 레이어 1: 바탕 */}
           <Layer listening={false}>
-            <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="#f0ece4" />
+            <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="transparent" />
             <Group clipFunc={clipFunc as never}>
               <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill={baseColor} />
             </Group>
@@ -531,7 +524,21 @@ export default function TopFaceCanvas({
             </Group>
 
           </Layer>
+
         </Stage>
+        {/* 원형 테두리 — CSS 오버레이 (텍스처 캡처에서 제외) */}
+        <div
+          style={{
+            position: 'absolute',
+            left: CANVAS_SIZE / 2 - RADIUS,
+            top: CANVAS_SIZE / 2 - RADIUS,
+            width: RADIUS * 2,
+            height: RADIUS * 2,
+            borderRadius: '50%',
+            border: '1.5px solid #d4c8b4',
+            pointerEvents: 'none',
+          }}
+        />
         {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 */}
         {cursor && (tool === 'brush' || tool === 'eraser') && (
           <div
@@ -547,7 +554,7 @@ export default function TopFaceCanvas({
             }}
           />
         )}
-      </Paper>
+      </div>
       </div>
     </Stack>
   )

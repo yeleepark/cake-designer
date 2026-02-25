@@ -219,10 +219,10 @@ export default function Editor() {
               <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} />
             </Box>
             <Button
-              variant="outlined"
+              variant="contained"
               onClick={exportToPNG}
               startIcon={<DownloadIcon />}
-              sx={{ borderRadius: 6, px: 3, fontWeight: 600, textTransform: 'none' }}
+              sx={{ px: 3, textTransform: 'none' }}
             >
               PNG 저장
             </Button>
@@ -251,7 +251,7 @@ export default function Editor() {
       >
         {/* 좌측 그라디언트 */}
         {scrollFade.left && (
-          <Box sx={{ position: 'absolute', left: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to right, #faf8f5, transparent)' }} />
+          <Box sx={{ position: 'absolute', left: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to right, #f2e8d8, transparent)' }} />
         )}
         <Box ref={scrollRef} sx={{ display: 'flex', alignItems: 'center', gap: 1, overflowX: 'auto', px: 1.5, width: '100%', height: 64, scrollbarWidth: 'none' }}>
           {isDesign && (
@@ -263,18 +263,18 @@ export default function Editor() {
           <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} compact />
           <Divider orientation="vertical" flexItem sx={{ height: 32, alignSelf: 'center' }} />
           <Button
-            variant="outlined"
+            variant="contained"
             size="small"
             onClick={exportToPNG}
             startIcon={<DownloadIcon />}
-            sx={{ flexShrink: 0, borderRadius: 6, fontWeight: 600, textTransform: 'none', whiteSpace: 'nowrap' }}
+            sx={{ flexShrink: 0, textTransform: 'none', whiteSpace: 'nowrap' }}
           >
             저장
           </Button>
         </Box>
         {/* 우측 그라디언트 */}
         {scrollFade.right && (
-          <Box sx={{ position: 'absolute', right: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to left, #faf8f5, transparent)' }} />
+          <Box sx={{ position: 'absolute', right: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to left, #f2e8d8, transparent)' }} />
         )}
       </Paper>
 

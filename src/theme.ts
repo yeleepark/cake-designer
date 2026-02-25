@@ -4,46 +4,47 @@ import { createTheme } from '@mui/material/styles'
 
 const theme = createTheme({
   palette: {
-    primary: { main: '#7b9cc0', light: '#d4e3f0', dark: '#567a9e' },
+    primary: { main: '#8a6a4e', light: '#b8976e', dark: '#6a4e34' },
     background: {
-      default: '#f0ece4',
-      paper: '#faf8f5',
+      default: '#e8dcc8',
+      paper: '#f2e8d8',
     },
     text: {
-      primary: '#3a3a3a',
-      secondary: '#8a8580',
-      disabled: '#b8b3ac',
+      primary: '#2a2218',
+      secondary: '#6b5e50',
+      disabled: '#a89e90',
     },
-    divider: '#e0dbd3',
+    divider: '#d4c8b4',
     grey: {
-      50: '#f5f2ed',
-      100: '#ece8e1',
-      200: '#e0dbd3',
-      300: '#d1cbc2',
-      400: '#b8b3ac',
-      500: '#8a8580',
+      50: '#efe5d5',
+      100: '#e8dcc8',
+      200: '#d4c8b4',
+      300: '#c4b8a4',
+      400: '#a89e90',
+      500: '#6b5e50',
     },
     action: {
-      selected: '#e8edf4',
-      hover: 'rgba(123,156,192,0.08)',
+      selected: 'rgba(138,106,78,0.12)',
+      hover: 'rgba(138,106,78,0.06)',
     },
   },
   breakpoints: {
     values: { xs: 0, sm: 600, md: 768, lg: 1200, xl: 1536 },
   },
   shape: {
-    borderRadius: 16,
+    borderRadius: 12,
   },
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    h1: { fontFamily: 'Georgia, "Times New Roman", serif' },
-    h2: { fontFamily: 'Georgia, "Times New Roman", serif' },
-    h3: { fontFamily: 'Georgia, "Times New Roman", serif' },
-    h4: { fontFamily: 'Georgia, "Times New Roman", serif' },
-    h5: { fontFamily: 'Georgia, "Times New Roman", serif' },
-    h6: { fontFamily: 'Georgia, "Times New Roman", serif' },
-    subtitle1: { fontFamily: 'Georgia, "Times New Roman", serif' },
-    subtitle2: { fontFamily: 'Georgia, "Times New Roman", serif' },
+    fontFamily: 'var(--font-gowun-dodum), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    h1: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    h2: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    h3: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    h4: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    h5: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    h6: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    subtitle1: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    subtitle2: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
+    button: { fontFamily: 'var(--font-gowun-dodum), sans-serif' },
   },
   components: {
     MuiPopover: {
@@ -52,18 +53,20 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 24,
+          borderRadius: 8,
           boxShadow: 'none',
+          fontWeight: 600,
           '&:hover': { boxShadow: 'none' },
         },
         contained: {
-          backgroundColor: '#7b9cc0',
-          '&:hover': { backgroundColor: '#567a9e' },
+          backgroundColor: '#8a6a4e',
+          color: '#fff',
+          '&:hover': { backgroundColor: '#6a4e34' },
         },
         outlined: {
-          borderColor: '#d1cbc2',
-          color: '#3a3a3a',
-          '&:hover': { borderColor: '#7b9cc0', backgroundColor: 'rgba(123,156,192,0.06)' },
+          borderColor: '#c4b8a4',
+          color: '#2a2218',
+          '&:hover': { borderColor: '#8a6a4e', backgroundColor: 'rgba(138,106,78,0.06)' },
         },
       },
     },
@@ -76,18 +79,18 @@ const theme = createTheme({
     },
     MuiSlider: {
       styleOverrides: {
-        root: { color: '#7b9cc0' },
+        root: { color: '#8a6a4e' },
       },
     },
     MuiTabs: {
       styleOverrides: {
-        indicator: { backgroundColor: '#7b9cc0' },
+        indicator: { backgroundColor: '#8a6a4e' },
       },
     },
     MuiTab: {
       styleOverrides: {
         root: {
-          '&.Mui-selected': { color: '#7b9cc0' },
+          '&.Mui-selected': { color: '#8a6a4e' },
         },
       },
     },
