@@ -27,9 +27,9 @@ export default function CakeShapeSelector({ value, onChange, compact = false }: 
       sx={{
         gap: 1,
         '& .MuiToggleButton-root': {
-          borderRadius: '12px !important',
-          border: '2px solid',
-          borderColor: 'grey.300',
+          borderRadius: '16px !important',
+          border: '1.5px solid',
+          borderColor: 'grey.200',
           textTransform: 'none',
           fontWeight: 500,
           gap: 0.5,
@@ -37,14 +37,16 @@ export default function CakeShapeSelector({ value, onChange, compact = false }: 
           height: compact ? 48 : 64,
           flexDirection: compact ? 'row' : 'column',
           fontSize: '0.875rem',
+          transition: 'all 0.2s ease',
           '&.Mui-selected': {
             borderColor: 'primary.main',
-            bgcolor: 'primary.50',
+            bgcolor: 'action.selected',
             color: 'primary.dark',
-            '&:hover': { bgcolor: 'primary.50' },
+            '&:hover': { bgcolor: 'action.selected' },
           },
           '&:not(.Mui-selected):hover': {
-            borderColor: 'grey.400',
+            borderColor: 'grey.300',
+            bgcolor: 'grey.50',
           },
         },
       }}

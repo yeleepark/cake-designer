@@ -88,7 +88,7 @@ function ColorSwatch({
               height: 32,
               borderRadius: 1,
               border: 2,
-              borderColor: selected === c ? 'primary.main' : 'grey.300',
+              borderColor: selected === c ? 'primary.main' : 'grey.200',
               transform: selected === c ? 'scale(1.1)' : 'none',
               transition: 'transform 0.15s',
               backgroundColor: c,
@@ -166,10 +166,11 @@ export default function Toolbar({
     height: horizontal ? 48 : 40,
     borderRadius: 3,
     border: 1,
-    borderColor: active ? 'primary.main' : 'grey.300',
+    borderColor: active ? 'primary.main' : 'grey.200',
     bgcolor: active ? 'action.selected' : 'background.paper',
     color: active ? 'primary.main' : 'text.secondary',
-    '&:hover': { bgcolor: active ? 'action.selected' : 'grey.100', borderColor: active ? 'primary.main' : 'grey.400', color: active ? 'primary.main' : 'text.primary' },
+    transition: 'all 0.2s ease',
+    '&:hover': { bgcolor: active ? 'action.selected' : 'grey.100', borderColor: active ? 'primary.main' : 'grey.300', color: active ? 'primary.main' : 'text.primary' },
   })
 
   const colorDot = (color: string) => (
@@ -265,7 +266,7 @@ export default function Toolbar({
         onClose={() => setBaseColorAnchor(null)}
         anchorOrigin={{ vertical: horizontal ? 'top' : 'center', horizontal: horizontal ? 'center' : 'right' }}
         transformOrigin={{ vertical: horizontal ? 'bottom' : 'center', horizontal: horizontal ? 'center' : 'left' }}
-        slotProps={{ paper: { sx: { p: 2, width: 224, borderRadius: 3 } } }}
+        slotProps={{ paper: { sx: { p: 2.5, width: 224, borderRadius: 4, border: 1, borderColor: 'divider' } } }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
           <Typography variant="subtitle2">바탕 색상</Typography>
@@ -283,7 +284,7 @@ export default function Toolbar({
         onClose={() => setPopupAnchor(null)}
         anchorOrigin={{ vertical: horizontal ? 'top' : 'center', horizontal: horizontal ? 'center' : 'right' }}
         transformOrigin={{ vertical: horizontal ? 'bottom' : 'center', horizontal: horizontal ? 'center' : 'left' }}
-        slotProps={{ paper: { sx: { p: 2, width: 224, borderRadius: 3 } } }}
+        slotProps={{ paper: { sx: { p: 2.5, width: 224, borderRadius: 4, border: 1, borderColor: 'divider' } } }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
           <Typography variant="subtitle2">{popupTitle}</Typography>
@@ -361,7 +362,7 @@ export default function Toolbar({
               <Typography variant="caption" color="text.secondary">크기</Typography>
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>{size}px</Typography>
             </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 68, bgcolor: 'grey.50', borderRadius: 2, mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 68, bgcolor: 'grey.50', borderRadius: 3, mb: 1 }}>
               <Box
                 sx={{
                   width: size,

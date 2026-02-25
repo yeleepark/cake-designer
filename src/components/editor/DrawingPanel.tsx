@@ -97,19 +97,20 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
           size="small"
           sx={{
             bgcolor: 'grey.100',
-            borderRadius: 2,
-            p: 0.25,
+            borderRadius: 3,
+            p: 0.5,
             '& .MuiToggleButton-root': {
               border: 'none',
-              borderRadius: '6px !important',
+              borderRadius: '10px !important',
               fontSize: '0.75rem',
               fontWeight: 600,
               py: 0.75,
               textTransform: 'none',
+              transition: 'all 0.2s ease',
               '&.Mui-selected': {
                 bgcolor: 'background.paper',
                 color: 'primary.main',
-                boxShadow: 1,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
               },
             },
           }}

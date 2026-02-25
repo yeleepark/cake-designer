@@ -454,10 +454,10 @@ export default function TopFaceCanvas({
         variant="outlined"
         sx={{
           position: 'relative',
-          borderRadius: 3,
+          borderRadius: 4,
           overflow: 'hidden',
-          borderWidth: 2,
-          borderColor: 'grey.300',
+          borderWidth: 1.5,
+          borderColor: 'grey.200',
           width: CANVAS_SIZE,
           height: CANVAS_SIZE,
           transform: `scale(${scale})`,
@@ -480,7 +480,7 @@ export default function TopFaceCanvas({
         >
           {/* 레이어 1: 바탕 */}
           <Layer listening={false}>
-            <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="#f1f2f4" />
+            <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="#f0ece4" />
             <Group clipFunc={clipFunc as never}>
               <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill={baseColor} />
             </Group>

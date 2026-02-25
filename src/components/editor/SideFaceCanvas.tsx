@@ -231,10 +231,10 @@ export default function SideFaceCanvas({
         variant="outlined"
         sx={{
           position: 'relative',
-          borderRadius: 3,
+          borderRadius: 0,
           overflow: 'hidden',
-          borderWidth: 2,
-          borderColor: 'grey.300',
+          borderWidth: 1.5,
+          borderColor: 'grey.200',
           width: CANVAS_W,
           height: CAKE_HEIGHT,
           transform: `scale(${scale})`,

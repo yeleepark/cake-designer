@@ -106,17 +106,17 @@ export default function Editor() {
   const isDesign = mobileTab === 0
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'grey.50' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'background.default' }}>
       {/* Header */}
-      <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }} className="landscape-header">
+      <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.default' }} className="landscape-header">
         <MuiToolbar variant="dense" sx={{ justifyContent: 'space-between', px: { xs: 2, md: 3 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CakeIcon sx={{ fontSize: 28, color: 'primary.main' }} />
-            <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+            <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ letterSpacing: 0.5 }}>
               케이크 도안 디자이너
             </Typography>
           </Box>
-          <Typography variant="caption" color="text.disabled" sx={{ display: { xs: 'none', md: 'block' } }}>
+          <Typography variant="caption" color="text.disabled" sx={{ display: { xs: 'none', md: 'block' }, fontStyle: 'italic' }}>
             브러쉬로 그리고 3D 미리보기를 확인하세요
           </Typography>
         </MuiToolbar>
@@ -130,7 +130,7 @@ export default function Editor() {
           variant="fullWidth"
           textColor="primary"
           indicatorColor="primary"
-          sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}
+          sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { textTransform: 'none' } }}
         >
           <Tab icon={<EditIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="시안" sx={{ fontWeight: 600, fontSize: '0.875rem', minHeight: 48 }} />
           <Tab icon={<CakeIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="케이크" sx={{ fontWeight: 600, fontSize: '0.875rem', minHeight: 48 }} />
@@ -161,7 +161,7 @@ export default function Editor() {
         >
           <Box sx={{ display: 'flex', flex: { md: 1 }, minHeight: { md: 0 } }}>
             {/* 세로 툴바 (데스크탑 전용) */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, width: 64, flexShrink: 0, borderRight: 1, borderColor: 'grey.100', p: 1.5, bgcolor: 'grey.50', flexDirection: 'column', alignItems: 'center' }}>
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, width: 64, flexShrink: 0, borderRight: 1, borderColor: 'divider', p: 1.5, bgcolor: 'grey.50', flexDirection: 'column', alignItems: 'center' }}>
               <Toolbar {...toolbarProps} />
             </Box>
             <Box sx={{ flex: 1, p: 2, overflow: { md: 'auto' } }}>
@@ -198,7 +198,7 @@ export default function Editor() {
             minHeight: { md: 0 },
             visibility: { xs: !isDesign ? 'visible' : 'hidden', md: 'visible' },
             pointerEvents: { xs: !isDesign ? 'auto' : 'none', md: 'auto' },
-            bgcolor: { xs: !isDesign ? 'grey.100' : 'transparent', md: 'grey.100' },
+            bgcolor: { xs: !isDesign ? 'background.paper' : 'transparent', md: 'background.paper' },
           }}
         >
           <Box sx={{ flex: 1, minHeight: 0, p: 2 }}>
@@ -219,10 +219,10 @@ export default function Editor() {
               <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} />
             </Box>
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={exportToPNG}
               startIcon={<DownloadIcon />}
-              sx={{ borderRadius: 3, px: 3, fontWeight: 600, textTransform: 'none' }}
+              sx={{ borderRadius: 6, px: 3, fontWeight: 600, textTransform: 'none' }}
             >
               PNG 저장
             </Button>
@@ -232,7 +232,7 @@ export default function Editor() {
 
       {/* 하단 고정 바 (모바일 전용) */}
       <Paper
-        elevation={4}
+        elevation={0}
         square
         sx={{
           position: 'fixed',
@@ -251,7 +251,7 @@ export default function Editor() {
       >
         {/* 좌측 그라디언트 */}
         {scrollFade.left && (
-          <Box sx={{ position: 'absolute', left: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to right, white, transparent)' }} />
+          <Box sx={{ position: 'absolute', left: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to right, #faf8f5, transparent)' }} />
         )}
         <Box ref={scrollRef} sx={{ display: 'flex', alignItems: 'center', gap: 1, overflowX: 'auto', px: 1.5, width: '100%', height: 64, scrollbarWidth: 'none' }}>
           {isDesign && (
@@ -263,25 +263,25 @@ export default function Editor() {
           <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} compact />
           <Divider orientation="vertical" flexItem sx={{ height: 32, alignSelf: 'center' }} />
           <Button
-            variant="contained"
+            variant="outlined"
             size="small"
             onClick={exportToPNG}
             startIcon={<DownloadIcon />}
-            sx={{ flexShrink: 0, borderRadius: 3, fontWeight: 600, textTransform: 'none', whiteSpace: 'nowrap' }}
+            sx={{ flexShrink: 0, borderRadius: 6, fontWeight: 600, textTransform: 'none', whiteSpace: 'nowrap' }}
           >
             저장
           </Button>
         </Box>
         {/* 우측 그라디언트 */}
         {scrollFade.right && (
-          <Box sx={{ position: 'absolute', right: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to left, white, transparent)' }} />
+          <Box sx={{ position: 'absolute', right: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to left, #faf8f5, transparent)' }} />
         )}
       </Paper>
 
       {/* Footer (데스크탑 전용) */}
       <Box
         component="footer"
-        sx={{ display: { xs: 'none', md: 'flex' }, bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider', px: 3, py: 1, alignItems: 'center', justifyContent: 'center', gap: 1.5, flexShrink: 0 }}
+        sx={{ display: { xs: 'none', md: 'flex' }, bgcolor: 'background.default', borderTop: 1, borderColor: 'divider', px: 3, py: 1.5, alignItems: 'center', justifyContent: 'center', gap: 1.5, flexShrink: 0 }}
       >
         <Typography variant="caption" color="text.secondary" fontWeight={500}>Seoyoon Park</Typography>
         <Typography color="text.disabled">·</Typography>

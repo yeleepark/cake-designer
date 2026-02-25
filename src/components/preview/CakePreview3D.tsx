@@ -15,7 +15,7 @@ const TOP_RADIUS = 130
 const CROP_SIZE = TOP_RADIUS * 2                        // 260
 const CROP_OFFSET = (TOP_CANVAS_SIZE - CROP_SIZE) / 2  // 20
 const TEX_SCALE = 3                                     // 텍스처 업스케일 배율
-const PLATE_COLOR = '#f1f2f4'
+const PLATE_COLOR = '#f0ece4'
 
 function cropTopCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElement {
   const outW = CROP_SIZE * TEX_SCALE
@@ -183,11 +183,11 @@ function InteractionHint() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: 'rgba(0,0,0,0.3)',
-          borderRadius: 3,
+          bgcolor: 'rgba(0,0,0,0.2)',
+          borderRadius: 4,
         }}
       >
-        <Box sx={{ textAlign: 'center', color: 'white', px: 2, py: 1.5, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+        <Box sx={{ textAlign: 'center', color: 'white', px: 3, py: 2, borderRadius: 4, bgcolor: 'rgba(58,58,58,0.6)', backdropFilter: 'blur(8px)' }}>
           <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>드래그로 회전 / 핀치로 확대</Typography>
           <Typography variant="caption" sx={{ opacity: 0.8 }}>탭하여 닫기</Typography>
         </Box>
@@ -211,6 +211,7 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
         camera={{ position: [0, 2.5, 5], fov: 45 }}
         shadows
         flat
+        scene={{ background: new THREE.Color('#faf8f5') }}
         gl={{
           antialias: true,
           powerPreference: 'high-performance',
