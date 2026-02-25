@@ -3,7 +3,7 @@
 import { useState, useEffect, type RefObject } from 'react'
 
 export function useContainerSize(ref: RefObject<HTMLElement | null>) {
-  const [width, setWidth] = useState(0)
+  const [size, setSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
     const el = ref.current
@@ -11,15 +11,15 @@ export function useContainerSize(ref: RefObject<HTMLElement | null>) {
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setWidth(entry.contentRect.width)
+        setSize({ width: entry.contentRect.width, height: entry.contentRect.height })
       }
     })
 
     observer.observe(el)
-    setWidth(el.clientWidth)
+    setSize({ width: el.clientWidth, height: el.clientHeight })
 
     return () => observer.disconnect()
   }, [ref])
 
-  return width
+  return size
 }

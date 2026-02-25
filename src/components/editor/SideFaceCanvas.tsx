@@ -10,6 +10,7 @@ import Paper from '@mui/material/Paper'
 
 interface Props {
   containerWidth: number
+  containerHeight?: number
   stageRef: React.RefObject<Konva.Stage | null>
   tool: Tool
   brushColor: string
@@ -22,6 +23,7 @@ interface Props {
   onBeforeAction: () => void
   onUpdate?: () => void
   onUndo?: () => void
+  vertical?: boolean
 }
 
 const CAKE_HEIGHT = 120
@@ -35,6 +37,7 @@ function getSideWidth(shape: CakeShape) {
 
 export default function SideFaceCanvas({
   containerWidth,
+  containerHeight = 0,
   stageRef,
   tool,
   brushColor,
@@ -47,6 +50,7 @@ export default function SideFaceCanvas({
   onBeforeAction,
   onUpdate,
   onUndo,
+  vertical = false,
 }: Props) {
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null)
   const isDrawing = useRef(false)
@@ -62,6 +66,8 @@ export default function SideFaceCanvas({
   }, [onBeforeAction])
 
   const CANVAS_W = getSideWidth(cakeShape)
+  const stageW = vertical ? CAKE_HEIGHT : CANVAS_W
+  const stageH = vertical ? CANVAS_W : CAKE_HEIGHT
 
   const notifyUpdate = useCallback(() => {
     setTimeout(() => onUpdate?.(), 50)
@@ -219,14 +225,17 @@ export default function SideFaceCanvas({
     notifyUpdate()
   }, [notifyUpdate, onUndo])
 
-  const scale = containerWidth > 0 ? Math.min(1, containerWidth / CANVAS_W) : 1
+  const labelH = 28 // approximate height of the label above
+  const scaleByW = containerWidth > 0 ? containerWidth / stageW : 1
+  const scaleByH = vertical && containerHeight > 0 ? (containerHeight - labelH) / stageH : Infinity
+  const scale = Math.min(1, scaleByW, scaleByH)
 
   return (
     <Stack alignItems="center">
       <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
         옆면 전개도 {cakeShape === 'circle' ? '(원주 펼침)' : cakeShape === 'square' ? '(4면 전개도)' : '(하트 둘레)'}
       </Typography>
-      <div style={{ width: CANVAS_W * scale, height: CAKE_HEIGHT * scale }}>
+      <div style={{ width: stageW * scale, height: stageH * scale }}>
       <Paper
         variant="outlined"
         sx={{
@@ -235,8 +244,8 @@ export default function SideFaceCanvas({
           overflow: 'hidden',
           borderWidth: 1.5,
           borderColor: 'grey.200',
-          width: CANVAS_W,
-          height: CAKE_HEIGHT,
+          width: stageW,
+          height: stageH,
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
           bgcolor: 'background.paper',
@@ -244,8 +253,8 @@ export default function SideFaceCanvas({
       >
         <Stage
           ref={stageRef}
-          width={CANVAS_W}
-          height={CAKE_HEIGHT}
+          width={stageW}
+          height={stageH}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -257,7 +266,7 @@ export default function SideFaceCanvas({
         >
           {/* 레이어 1: 바탕 */}
           <Layer listening={false}>
-            <Rect x={0} y={0} width={CANVAS_W} height={CAKE_HEIGHT} fill={baseColor} />
+            <Rect x={0} y={0} width={stageW} height={stageH} fill={baseColor} />
           </Layer>
 
           {/* 레이어 2: 그림 */}

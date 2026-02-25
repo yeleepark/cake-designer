@@ -6,6 +6,7 @@ import { OrbitControls, Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import type Konva from 'konva'
 import type { CakeShape } from '@/types/cake'
+import { useDeviceType } from '@/hooks/useDeviceType'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Fade from '@mui/material/Fade'
@@ -32,9 +33,20 @@ function cropTopCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasEleme
   return out
 }
 
+function transposeSideCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
+  const out = document.createElement('canvas')
+  out.width = src.height
+  out.height = src.width
+  const ctx = out.getContext('2d')!
+  ctx.transform(0, 1, 1, 0, 0, 0)
+  ctx.drawImage(src, 0, 0)
+  return out
+}
+
 function prepSideCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElement {
-  const outW = src.width * TEX_SCALE
-  const outH = src.height * TEX_SCALE
+  const source = src.height > src.width ? transposeSideCanvas(src) : src
+  const outW = source.width * TEX_SCALE
+  const outH = source.height * TEX_SCALE
   const out = document.createElement('canvas')
   out.width = outW
   out.height = outH
@@ -43,7 +55,7 @@ function prepSideCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElem
   ctx.imageSmoothingQuality = 'high'
   ctx.fillStyle = bgColor
   ctx.fillRect(0, 0, outW, outH)
-  ctx.drawImage(src, 0, 0, outW, outH)
+  ctx.drawImage(source, 0, 0, outW, outH)
   return out
 }
 
@@ -243,11 +255,10 @@ function InteractionHint() {
 }
 
 export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, canvasRef, baseColor }: Props) {
-  const [isMobile] = useState(() =>
-    typeof window !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent)
-  )
-  const maxDpr = isMobile ? 1.5 : 2
-  const shadowSize = isMobile ? 1024 : 2048
+  const device = useDeviceType()
+  const lowPerf = device !== 'pc'
+  const maxDpr = lowPerf ? 1.5 : 2
+  const shadowSize = lowPerf ? 1024 : 2048
 
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '100%', minHeight: 400 }}>

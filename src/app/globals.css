@@ -18,9 +18,9 @@ body {
   box-sizing: border-box;
 }
 
-/* 모바일 하단 고정바 대비 패딩 — 데스크탑에서는 제거 */
+/* 모바일 하단 고정바(도구+풋터) 대비 패딩 */
 .mobile-safe-bottom {
-  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(4rem + 1.5rem + env(safe-area-inset-bottom, 0px));
 }
 @media (width >= 48rem) {
   .mobile-safe-bottom {
