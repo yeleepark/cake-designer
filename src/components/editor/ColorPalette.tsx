@@ -1,5 +1,9 @@
 'use client'
 
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Slider from '@mui/material/Slider'
+
 interface Props {
   color: string
   size: number
@@ -16,51 +20,63 @@ const PRESET_COLORS = [
 
 export default function ColorPalette({ color, size, onColorChange, onSizeChange }: Props) {
   return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">색상</p>
-        <div className="grid grid-cols-5 gap-1.5">
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box>
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1, display: 'block' }}>
+          색상
+        </Typography>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0.75 }}>
           {PRESET_COLORS.map((c) => (
-            <button
+            <Box
               key={c}
+              component="button"
               onClick={() => onColorChange(c)}
-              className={`w-7 h-7 rounded-md border-2 transition-transform hover:scale-110 ${
-                color === c ? 'border-violet-500 scale-110' : 'border-gray-200'
-              }`}
-              style={{ backgroundColor: c }}
               title={c}
+              sx={{
+                width: 28,
+                height: 28,
+                borderRadius: 1,
+                border: 2,
+                borderColor: color === c ? 'primary.main' : 'grey.300',
+                transform: color === c ? 'scale(1.1)' : 'none',
+                transition: 'transform 0.15s',
+                backgroundColor: c,
+                cursor: 'pointer',
+                p: 0,
+                '&:hover': { transform: 'scale(1.1)' },
+              }}
             />
           ))}
-        </div>
-        <div className="mt-2 flex items-center gap-2">
-          <label className="text-xs text-gray-500">직접 입력:</label>
-          <input
+        </Box>
+        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="caption" color="text.secondary">직접 입력:</Typography>
+          <Box
+            component="input"
             type="color"
             value={color}
-            onChange={(e) => onColorChange(e.target.value)}
-            className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onColorChange(e.target.value)}
+            sx={{ width: 32, height: 32, borderRadius: 1, cursor: 'pointer', border: 1, borderColor: 'grey.300' }}
           />
-          <span className="text-xs font-mono text-gray-600">{color}</span>
-        </div>
-      </div>
+          <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>{color}</Typography>
+        </Box>
+      </Box>
 
-      <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+      <Box>
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1, display: 'block' }}>
           굵기: {size}px
-        </p>
-        <input
-          type="range"
+        </Typography>
+        <Slider
+          value={size}
+          onChange={(_, v) => onSizeChange(v as number)}
           min={1}
           max={60}
-          value={size}
-          onChange={(e) => onSizeChange(Number(e.target.value))}
-          className="w-full accent-violet-500"
+          size="small"
         />
-        <div className="flex justify-between text-xs text-gray-400 mt-1">
-          <span>1</span>
-          <span>60</span>
-        </div>
-      </div>
-    </div>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography variant="caption" color="text.disabled">1</Typography>
+          <Typography variant="caption" color="text.disabled">60</Typography>
+        </Box>
+      </Box>
+    </Box>
   )
 }

@@ -4,6 +4,9 @@ import { useState, useCallback, useRef, forwardRef, useImperativeHandle } from '
 import type Konva from 'konva'
 import type { Tool, CakeShape, LineData, FillSnapshot, StampType, StampData } from '@/types/cake'
 import { useContainerSize } from '@/hooks/useContainerSize'
+import Box from '@mui/material/Box'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import ToggleButton from '@mui/material/ToggleButton'
 import TopFaceCanvas from './TopFaceCanvas'
 import SideFaceCanvas from './SideFaceCanvas'
 
@@ -45,10 +48,8 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
   const [sideLines, setSideLines] = useState<LineData[]>([])
   const [canvasTab, setCanvasTab] = useState<'top' | 'side'>('top')
 
-  // history는 ref로 관리 (불필요한 리렌더 방지)
   const history = useRef<HistoryEntry[]>([])
 
-  // 최신 상태를 ref로 추적 (pushHistory 클로저에서 항상 최신 값 사용)
   const topLinesRef = useRef(topLines)
   const topSnapshotsRef = useRef(topSnapshots)
   const topStampsRef = useRef(topStamps)
@@ -85,32 +86,40 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
   const containerWidth = useContainerSize(containerRef)
 
   return (
-    <div ref={containerRef} className="flex flex-col md:gap-6">
+    <Box ref={containerRef} sx={{ display: 'flex', flexDirection: 'column', gap: { md: 3 } }}>
       {/* 모바일 캔버스 탭 (윗면/옆면 전환) */}
-      <div className="flex md:hidden mb-3 bg-gray-100 rounded-lg p-0.5">
-        <button
-          onClick={() => setCanvasTab('top')}
-          className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-            canvasTab === 'top'
-              ? 'bg-white text-violet-600 shadow-sm'
-              : 'text-gray-500'
-          }`}
+      <Box sx={{ display: { xs: 'flex', md: 'none' }, mb: 1.5 }}>
+        <ToggleButtonGroup
+          exclusive
+          value={canvasTab}
+          onChange={(_, v) => v && setCanvasTab(v)}
+          fullWidth
+          size="small"
+          sx={{
+            bgcolor: 'grey.100',
+            borderRadius: 2,
+            p: 0.25,
+            '& .MuiToggleButton-root': {
+              border: 'none',
+              borderRadius: '6px !important',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              py: 0.75,
+              textTransform: 'none',
+              '&.Mui-selected': {
+                bgcolor: 'background.paper',
+                color: 'primary.main',
+                boxShadow: 1,
+              },
+            },
+          }}
         >
-          윗면
-        </button>
-        <button
-          onClick={() => setCanvasTab('side')}
-          className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-            canvasTab === 'side'
-              ? 'bg-white text-violet-600 shadow-sm'
-              : 'text-gray-500'
-          }`}
-        >
-          옆면
-        </button>
-      </div>
+          <ToggleButton value="top">윗면</ToggleButton>
+          <ToggleButton value="side">옆면</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
-      <div className={`${canvasTab !== 'top' ? 'hidden' : ''} md:block`}>
+      <Box sx={{ display: { xs: canvasTab === 'top' ? 'block' : 'none', md: 'block' } }}>
         <TopFaceCanvas
           containerWidth={containerWidth}
           stageRef={topRef}
@@ -134,8 +143,8 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
           onUpdate={onUpdate}
           onUndo={undo}
         />
-      </div>
-      <div className={`${canvasTab !== 'side' ? 'hidden' : ''} md:block`}>
+      </Box>
+      <Box sx={{ display: { xs: canvasTab === 'side' ? 'block' : 'none', md: 'block' } }}>
         <SideFaceCanvas
           containerWidth={containerWidth}
           stageRef={sideRef}
@@ -151,8 +160,8 @@ const DrawingPanel = forwardRef<DrawingPanelHandle, Props>(function DrawingPanel
           onUpdate={onUpdate}
           onUndo={undo}
         />
-      </div>
-    </div>
+      </Box>
+    </Box>
   )
 })
 

@@ -4,6 +4,9 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { Stage, Layer, Line, Rect } from 'react-konva'
 import type Konva from 'konva'
 import type { Tool, CakeShape, LineData } from '@/types/cake'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
+import Paper from '@mui/material/Paper'
 
 interface Props {
   containerWidth: number
@@ -219,18 +222,24 @@ export default function SideFaceCanvas({
   const scale = containerWidth > 0 ? Math.min(1, containerWidth / CANVAS_W) : 1
 
   return (
-    <div className="flex flex-col items-center">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+    <Stack alignItems="center">
+      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
         옆면 전개도 {cakeShape === 'circle' ? '(원주 펼침)' : '(4면 전개도)'}
-      </p>
+      </Typography>
       <div style={{ width: CANVAS_W * scale, height: CAKE_HEIGHT * scale }}>
-      <div
-        className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white"
-        style={{
+      <Paper
+        variant="outlined"
+        sx={{
+          position: 'relative',
+          borderRadius: 3,
+          overflow: 'hidden',
+          borderWidth: 2,
+          borderColor: 'grey.300',
           width: CANVAS_W,
           height: CAKE_HEIGHT,
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
+          bgcolor: 'background.paper',
         }}
       >
         <Stage
@@ -246,12 +255,12 @@ export default function SideFaceCanvas({
           onTouchEnd={handleTouchEnd}
           style={{ cursor: tool === 'line' ? 'crosshair' : 'none', touchAction: 'none' }}
         >
-          {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
+          {/* 레이어 1: 바탕 */}
           <Layer listening={false}>
             <Rect x={0} y={0} width={CANVAS_W} height={CAKE_HEIGHT} fill={baseColor} />
           </Layer>
 
-          {/* 레이어 2: 그림 — 지우개는 이 레이어만 지움 */}
+          {/* 레이어 2: 그림 */}
           <Layer>
             {lines.map((line) => (
               <Line
@@ -267,7 +276,7 @@ export default function SideFaceCanvas({
             ))}
           </Layer>
         </Stage>
-        {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 (texture 캡처에서 제외) */}
+        {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 */}
         {cursor && (tool === 'brush' || tool === 'eraser') && (
           <div
             style={{
@@ -282,8 +291,8 @@ export default function SideFaceCanvas({
             }}
           />
         )}
+      </Paper>
       </div>
-      </div>
-    </div>
+    </Stack>
   )
 }

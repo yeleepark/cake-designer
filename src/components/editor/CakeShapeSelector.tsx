@@ -1,6 +1,8 @@
 'use client'
 
 import type { CakeShape } from '@/types/cake'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import ToggleButton from '@mui/material/ToggleButton'
 import CircleIcon from '@mui/icons-material/Circle'
 import CropSquareIcon from '@mui/icons-material/CropSquare'
 
@@ -17,26 +19,42 @@ const SHAPES: { value: CakeShape; label: string; icon: React.ReactNode }[] = [
 
 export default function CakeShapeSelector({ value, onChange, compact = false }: Props) {
   return (
-    <div className="flex gap-2">
+    <ToggleButtonGroup
+      exclusive
+      value={value}
+      onChange={(_, v) => v && onChange(v)}
+      size="small"
+      sx={{
+        gap: 1,
+        '& .MuiToggleButton-root': {
+          borderRadius: '12px !important',
+          border: '2px solid',
+          borderColor: 'grey.300',
+          textTransform: 'none',
+          fontWeight: 500,
+          gap: 0.5,
+          width: compact ? 48 : 80,
+          height: compact ? 48 : 64,
+          flexDirection: compact ? 'row' : 'column',
+          fontSize: '0.875rem',
+          '&.Mui-selected': {
+            borderColor: 'primary.main',
+            bgcolor: 'primary.50',
+            color: 'primary.dark',
+            '&:hover': { bgcolor: 'primary.50' },
+          },
+          '&:not(.Mui-selected):hover': {
+            borderColor: 'grey.400',
+          },
+        },
+      }}
+    >
       {SHAPES.map((shape) => (
-        <button
-          key={shape.value}
-          onClick={() => onChange(shape.value)}
-          title={shape.label}
-          className={`flex items-center justify-center rounded-xl border-2 font-medium transition-colors ${
-            compact
-              ? 'w-12 h-12'
-              : 'flex-col gap-1 px-3 py-2 text-sm'
-          } ${
-            value === shape.value
-              ? 'border-violet-500 bg-violet-50 text-violet-700'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-          }`}
-        >
+        <ToggleButton key={shape.value} value={shape.value} title={shape.label}>
           {shape.icon}
           {!compact && <span>{shape.label}</span>}
-        </button>
+        </ToggleButton>
       ))}
-    </div>
+    </ToggleButtonGroup>
   )
 }

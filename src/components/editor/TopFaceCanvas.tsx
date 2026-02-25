@@ -4,6 +4,9 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { Stage, Layer, Line, Rect, Circle, Group, Image as KonvaImage, Shape } from 'react-konva'
 import type Konva from 'konva'
 import type { Tool, CakeShape, LineData, FillSnapshot, StampType, StampData } from '@/types/cake'
+import Stack from '@mui/material/Stack'
+import Typography from '@mui/material/Typography'
+import Paper from '@mui/material/Paper'
 
 interface Props {
   containerWidth: number
@@ -58,10 +61,8 @@ function drawHeart(ctx: CanvasRenderingContext2D, size: number) {
   const s = size / 2
   ctx.beginPath()
   ctx.moveTo(0, s * 0.7)
-  // left half: bottom → left bump → top center dip
   ctx.bezierCurveTo(-s * 0.55, s * 0.35, -s, -s * 0.1, -s * 0.5, -s * 0.5)
   ctx.bezierCurveTo(-s * 0.15, -s * 0.8, 0, -s * 0.5, 0, -s * 0.2)
-  // right half: top center dip → right bump → bottom
   ctx.bezierCurveTo(0, -s * 0.5, s * 0.15, -s * 0.8, s * 0.5, -s * 0.5)
   ctx.bezierCurveTo(s, -s * 0.1, s * 0.55, s * 0.35, 0, s * 0.7)
   ctx.closePath()
@@ -202,7 +203,6 @@ export default function TopFaceCanvas({
         }
       }
 
-      // 칠해진 픽셀만 저장 (나머지 투명)
       const fillCanvas = document.createElement('canvas')
       fillCanvas.width = w
       fillCanvas.height = h
@@ -220,8 +220,6 @@ export default function TopFaceCanvas({
       }
       fillCtx.putImageData(fillImageData, 0, 0)
 
-      // 지우개(destination-out) 라인이 채우기 스냅샷을 지우는 것을 방지:
-      // 그리기 그룹의 현재 합성 상태를 플래튼하고 채우기 결과를 합쳐 단일 스냅샷으로 저장
       const drawingLayer = stage.getLayers()[1]
       const drawingGroup = drawingLayer?.children?.[0]
 
@@ -301,7 +299,6 @@ export default function TopFaceCanvas({
       const pos = e.target.getStage()?.getPointerPosition()
       if (!pos) return
 
-      // 커서 가이드 업데이트
       setCursor({ x: pos.x, y: pos.y })
 
       if (!isDrawing.current || !currentId.current) return
@@ -443,23 +440,29 @@ export default function TopFaceCanvas({
   const scale = containerWidth > 0 ? Math.min(1, containerWidth / CANVAS_SIZE) : 1
 
   return (
-    <div className="flex flex-col items-center">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+    <Stack alignItems="center">
+      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
         윗면 {cakeShape === 'circle' ? '(원형)' : '(사각형)'}
-      </p>
+      </Typography>
       <div
         style={{
           width: CANVAS_SIZE * scale,
           height: CANVAS_SIZE * scale,
         }}
       >
-      <div
-        className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm bg-white"
-        style={{
+      <Paper
+        variant="outlined"
+        sx={{
+          position: 'relative',
+          borderRadius: 3,
+          overflow: 'hidden',
+          borderWidth: 2,
+          borderColor: 'grey.300',
           width: CANVAS_SIZE,
           height: CANVAS_SIZE,
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
+          bgcolor: 'background.paper',
         }}
       >
         <Stage
@@ -475,7 +478,7 @@ export default function TopFaceCanvas({
           onTouchEnd={handleTouchEnd}
           style={{ cursor: (tool === 'fill' || tool === 'line' || tool === 'stamp') ? 'crosshair' : 'none', touchAction: 'none' }}
         >
-          {/* 레이어 1: 바탕 — 지우개(destination-out)에 영향받지 않음 */}
+          {/* 레이어 1: 바탕 */}
           <Layer listening={false}>
             <Rect x={0} y={0} width={CANVAS_SIZE} height={CANVAS_SIZE} fill="#f1f2f4" />
             <Group clipFunc={clipFunc as never}>
@@ -483,7 +486,7 @@ export default function TopFaceCanvas({
             </Group>
           </Layer>
 
-          {/* 레이어 2: 그림 — 지우개는 이 레이어만 지움 */}
+          {/* 레이어 2: 그림 */}
           <Layer>
             <Group clipFunc={clipFunc as never}>
               {snapshots.map((s) => (
@@ -529,7 +532,7 @@ export default function TopFaceCanvas({
 
           </Layer>
         </Stage>
-        {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 (texture 캡처에서 제외) */}
+        {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 */}
         {cursor && (tool === 'brush' || tool === 'eraser') && (
           <div
             style={{
@@ -544,8 +547,8 @@ export default function TopFaceCanvas({
             }}
           />
         )}
+      </Paper>
       </div>
-      </div>
-    </div>
+    </Stack>
   )
 }

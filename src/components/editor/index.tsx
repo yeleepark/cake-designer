@@ -5,6 +5,15 @@ import type { CakeShape } from '@/types/cake'
 import dynamic from 'next/dynamic'
 import { useDrawing } from '@/hooks/useDrawing'
 import { useExport } from '@/hooks/useExport'
+import AppBar from '@mui/material/AppBar'
+import MuiToolbar from '@mui/material/Toolbar'
+import Box from '@mui/material/Box'
+import Tabs from '@mui/material/Tabs'
+import Tab from '@mui/material/Tab'
+import Button from '@mui/material/Button'
+import Paper from '@mui/material/Paper'
+import Typography from '@mui/material/Typography'
+import Divider from '@mui/material/Divider'
 import CakeIcon from '@mui/icons-material/Cake'
 import EditIcon from '@mui/icons-material/Edit'
 import DownloadIcon from '@mui/icons-material/Download'
@@ -15,9 +24,9 @@ import DrawingPanel, { type DrawingPanelHandle } from './DrawingPanel'
 const CakePreview3D = dynamic(() => import('@/components/preview/CakePreview3D'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full min-h-[400px] flex items-center justify-center bg-gray-50 rounded-xl">
-      <p className="text-gray-400 text-sm">3D 미리보기 로딩 중...</p>
-    </div>
+    <Box sx={{ width: '100%', height: '100%', minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.50', borderRadius: 3 }}>
+      <Typography variant="body2" color="text.disabled">3D 미리보기 로딩 중...</Typography>
+    </Box>
   ),
 })
 
@@ -29,7 +38,7 @@ export default function Editor() {
   const [updateTick, setUpdateTick] = useState(0)
   const drawingPanelRef = useRef<DrawingPanelHandle>(null)
   const [canUndo, setCanUndo] = useState(false)
-  const [mobileTab, setMobileTab] = useState<'design' | 'cake'>('design')
+  const [mobileTab, setMobileTab] = useState(0) // 0=design, 1=cake
   const scrollRef = useRef<HTMLDivElement>(null)
   const [scrollFade, setScrollFade] = useState({ left: false, right: true })
 
@@ -50,9 +59,9 @@ export default function Editor() {
     return () => el.removeEventListener('scroll', updateScrollFade)
   }, [updateScrollFade, mobileTab])
 
-  const handleMobileTab = useCallback((tab: 'design' | 'cake') => {
+  const handleMobileTab = useCallback((_: React.SyntheticEvent, tab: number) => {
     setMobileTab(tab)
-    if (tab === 'cake') {
+    if (tab === 1) {
       setTimeout(() => setUpdateTick((t) => t + 1), 50)
     }
   }, [])
@@ -61,13 +70,11 @@ export default function Editor() {
     setUpdateTick((t) => t + 1)
   }, [])
 
-  // 케이크 모양 변경 시 Konva가 새 clipFunc로 다시 그릴 시간을 준 뒤 텍스처 갱신
   const handleShapeChange = useCallback((shape: CakeShape) => {
     setCakeShape(shape)
     setTimeout(() => setUpdateTick((t) => t + 1), 80)
   }, [setCakeShape])
 
-  // 바탕색 변경 시 Konva 캔버스 재렌더 후 텍스처 갱신
   useEffect(() => {
     const timer = setTimeout(() => setUpdateTick((t) => t + 1), 50)
     return () => clearTimeout(timer)
@@ -96,56 +103,68 @@ export default function Editor() {
     canUndo,
   }
 
+  const isDesign = mobileTab === 0
+
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: 'grey.50' }}>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between shrink-0 landscape-header">
-        <div className="flex items-center gap-2">
-          <CakeIcon sx={{ fontSize: 28 }} className="text-violet-500" />
-          <h1 className="text-base md:text-lg font-bold text-gray-800">케이크 도안 디자이너</h1>
-        </div>
-        <p className="hidden md:block text-xs text-gray-400">브러쉬로 그리고 3D 미리보기를 확인하세요</p>
-      </header>
+      <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }} className="landscape-header">
+        <MuiToolbar variant="dense" sx={{ justifyContent: 'space-between', px: { xs: 2, md: 3 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CakeIcon sx={{ fontSize: 28, color: 'primary.main' }} />
+            <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+              케이크 도안 디자이너
+            </Typography>
+          </Box>
+          <Typography variant="caption" color="text.disabled" sx={{ display: { xs: 'none', md: 'block' } }}>
+            브러쉬로 그리고 3D 미리보기를 확인하세요
+          </Typography>
+        </MuiToolbar>
+      </AppBar>
 
       {/* 탭 바 (모바일 전용) */}
-      <div className="flex md:hidden shrink-0 bg-white border-b border-gray-200 landscape-hide">
-        {([
-          { id: 'design', label: '시안', icon: <EditIcon sx={{ fontSize: 18 }} /> },
-          { id: 'cake',   label: '케이크', icon: <CakeIcon sx={{ fontSize: 18 }} /> },
-        ] as const).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleMobileTab(tab.id as 'design' | 'cake')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors border-b-2 ${
-              mobileTab === tab.id
-                ? 'border-violet-500 text-violet-600'
-                : 'border-transparent text-gray-400'
-            }`}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* 메인 콘텐츠 — 단일 레이아웃 구조 */}
-      <div className="flex-1 min-h-0 overflow-hidden relative md:flex">
-
-        {/* ── 시안 패널 (DrawingPanel 단일 인스턴스) ── */}
-        {/* 데스크탑: flex 컬럼으로 항상 표시 / 모바일: design 탭일 때만 표시 */}
-        <div
-          className={`bg-white md:relative md:inset-auto md:w-3/5 md:min-w-0 md:flex md:flex-col md:min-h-0 md:border-r md:border-gray-200 md:visible md:pointer-events-auto md:overflow-visible ${
-            mobileTab === 'design'
-              ? 'absolute inset-0 overflow-y-auto mobile-safe-bottom'
-              : 'absolute inset-0 invisible pointer-events-none'
-          }`}
+      <Box sx={{ display: { xs: 'block', md: 'none' }, flexShrink: 0 }} className="landscape-hide">
+        <Tabs
+          value={mobileTab}
+          onChange={handleMobileTab}
+          variant="fullWidth"
+          textColor="primary"
+          indicatorColor="primary"
+          sx={{ bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}
         >
-          {/* 내부: 세로 툴바(데스크탑 전용) + 캔버스 */}
-          <div className="flex gap-0 md:flex-1 md:min-h-0">
-            <div className="hidden md:flex w-16 shrink-0 border-r border-gray-100 p-3 bg-gray-50 flex-col items-center">
+          <Tab icon={<EditIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="시안" sx={{ fontWeight: 600, fontSize: '0.875rem', minHeight: 48 }} />
+          <Tab icon={<CakeIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="케이크" sx={{ fontWeight: 600, fontSize: '0.875rem', minHeight: 48 }} />
+        </Tabs>
+      </Box>
+
+      {/* 메인 콘텐츠 */}
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative', display: { md: 'flex' } }}>
+
+        {/* ── 시안 패널 ── */}
+        <Box
+          sx={{
+            bgcolor: 'background.paper',
+            position: { xs: 'absolute', md: 'relative' },
+            inset: { xs: 0, md: 'auto' },
+            width: { md: '60%' },
+            minWidth: { md: 0 },
+            display: { md: 'flex' },
+            flexDirection: { md: 'column' },
+            minHeight: { md: 0 },
+            borderRight: { md: 1 },
+            borderColor: { md: 'divider' },
+            visibility: { xs: isDesign ? 'visible' : 'hidden', md: 'visible' },
+            pointerEvents: { xs: isDesign ? 'auto' : 'none', md: 'auto' },
+            overflow: { xs: isDesign ? 'auto' : 'visible', md: 'visible' },
+          }}
+          className={isDesign ? 'mobile-safe-bottom' : undefined}
+        >
+          <Box sx={{ display: 'flex', flex: { md: 1 }, minHeight: { md: 0 } }}>
+            {/* 세로 툴바 (데스크탑 전용) */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, width: 64, flexShrink: 0, borderRight: 1, borderColor: 'grey.100', p: 1.5, bgcolor: 'grey.50', flexDirection: 'column', alignItems: 'center' }}>
               <Toolbar {...toolbarProps} />
-            </div>
-            <div className="flex-1 p-4 md:overflow-y-auto">
+            </Box>
+            <Box sx={{ flex: 1, p: 2, overflow: { md: 'auto' } }}>
               <DrawingPanel
                 ref={drawingPanelRef}
                 tool={tool}
@@ -163,20 +182,26 @@ export default function Editor() {
                 onUndoChange={setCanUndo}
                 onUpdate={handleUpdate}
               />
-            </div>
-          </div>
-        </div>
+            </Box>
+          </Box>
+        </Box>
 
         {/* ── 3D 미리보기 패널 ── */}
-        {/* 데스크탑: flex 컬럼으로 항상 표시 / 모바일: cake 탭일 때만 표시 */}
-        <div
-          className={`md:relative md:inset-auto md:w-2/5 md:min-w-0 md:flex md:flex-col md:min-h-0 md:visible md:pointer-events-auto md:bg-gray-100 ${
-            mobileTab === 'cake'
-              ? 'absolute inset-0 flex flex-col bg-gray-100'
-              : 'absolute inset-0 invisible pointer-events-none'
-          }`}
+        <Box
+          sx={{
+            position: { xs: 'absolute', md: 'relative' },
+            inset: { xs: 0, md: 'auto' },
+            width: { md: '40%' },
+            minWidth: { md: 0 },
+            display: { xs: !isDesign ? 'flex' : 'block', md: 'flex' },
+            flexDirection: { xs: 'column', md: 'column' },
+            minHeight: { md: 0 },
+            visibility: { xs: !isDesign ? 'visible' : 'hidden', md: 'visible' },
+            pointerEvents: { xs: !isDesign ? 'auto' : 'none', md: 'auto' },
+            bgcolor: { xs: !isDesign ? 'grey.100' : 'transparent', md: 'grey.100' },
+          }}
         >
-          <div className="flex-1 min-h-0 p-4">
+          <Box sx={{ flex: 1, minHeight: 0, p: 2 }}>
             <CakePreview3D
               topRef={topRef}
               sideRef={sideRef}
@@ -185,66 +210,90 @@ export default function Editor() {
               canvasRef={threeCanvasRef}
               baseColor={baseColor}
             />
-          </div>
-          <div className="border-t border-gray-200 p-4 bg-white shrink-0 hidden md:flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">케이크 모양</p>
+          </Box>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', justifyContent: 'space-between', borderTop: 1, borderColor: 'divider', p: 2, bgcolor: 'background.paper', flexShrink: 0 }}>
+            <Box>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1, display: 'block' }}>
+                케이크 모양
+              </Typography>
               <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} />
-            </div>
-            <button
+            </Box>
+            <Button
+              variant="contained"
               onClick={exportToPNG}
-              className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
+              startIcon={<DownloadIcon />}
+              sx={{ borderRadius: 3, px: 3, fontWeight: 600, textTransform: 'none' }}
             >
-              <DownloadIcon fontSize="small" />
-              <span>PNG 저장</span>
-            </button>
-          </div>
-        </div>
-      </div>
+              PNG 저장
+            </Button>
+          </Box>
+        </Box>
+      </Box>
 
       {/* 하단 고정 바 (모바일 전용) */}
-      <div
-        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg flex items-center md:hidden landscape-compact-bar"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+      <Paper
+        elevation={4}
+        square
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          display: { xs: 'flex', md: 'none' },
+          alignItems: 'center',
+          borderTop: 1,
+          borderColor: 'divider',
+          pb: 'env(safe-area-inset-bottom, 0px)',
+          height: 'calc(4rem + env(safe-area-inset-bottom, 0px))',
+        }}
+        className="landscape-compact-bar"
       >
         {/* 좌측 그라디언트 */}
         {scrollFade.left && (
-          <div className="absolute left-0 top-0 h-16 w-6 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
+          <Box sx={{ position: 'absolute', left: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to right, white, transparent)' }} />
         )}
-        <div ref={scrollRef} className="flex items-center gap-2 overflow-x-auto px-3 w-full h-16" style={{ scrollbarWidth: 'none' }}>
-          {mobileTab === 'design' && (
+        <Box ref={scrollRef} sx={{ display: 'flex', alignItems: 'center', gap: 1, overflowX: 'auto', px: 1.5, width: '100%', height: 64, scrollbarWidth: 'none' }}>
+          {isDesign && (
             <>
               <Toolbar {...toolbarProps} horizontal />
-              <div className="h-8 w-px bg-gray-100 shrink-0" />
+              <Divider orientation="vertical" flexItem sx={{ height: 32, alignSelf: 'center' }} />
             </>
           )}
           <CakeShapeSelector value={cakeShape} onChange={handleShapeChange} compact />
-          <div className="h-8 w-px bg-gray-100 shrink-0" />
-          <button
+          <Divider orientation="vertical" flexItem sx={{ height: 32, alignSelf: 'center' }} />
+          <Button
+            variant="contained"
+            size="small"
             onClick={exportToPNG}
-            className="shrink-0 flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"
+            startIcon={<DownloadIcon />}
+            sx={{ flexShrink: 0, borderRadius: 3, fontWeight: 600, textTransform: 'none', whiteSpace: 'nowrap' }}
           >
-            <DownloadIcon fontSize="small" />
-            <span>저장</span>
-          </button>
-        </div>
+            저장
+          </Button>
+        </Box>
         {/* 우측 그라디언트 */}
         {scrollFade.right && (
-          <div className="absolute right-0 top-0 h-16 w-6 z-10 pointer-events-none bg-gradient-to-l from-white to-transparent" />
+          <Box sx={{ position: 'absolute', right: 0, top: 0, height: 64, width: 24, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(to left, white, transparent)' }} />
         )}
-      </div>
+      </Paper>
 
       {/* Footer (데스크탑 전용) */}
-      <footer className="hidden md:flex bg-white border-t border-gray-200 px-6 py-2 items-center justify-center gap-3 shrink-0">
-        <span className="text-xs text-gray-500 font-medium">Seoyoon Park</span>
-        <span className="text-gray-300">·</span>
-        <a
+      <Box
+        component="footer"
+        sx={{ display: { xs: 'none', md: 'flex' }, bgcolor: 'background.paper', borderTop: 1, borderColor: 'divider', px: 3, py: 1, alignItems: 'center', justifyContent: 'center', gap: 1.5, flexShrink: 0 }}
+      >
+        <Typography variant="caption" color="text.secondary" fontWeight={500}>Seoyoon Park</Typography>
+        <Typography color="text.disabled">·</Typography>
+        <Typography
+          component="a"
           href="mailto:dev.yelee@gmail.com"
-          className="text-xs text-violet-500 hover:text-violet-700 transition-colors"
+          variant="caption"
+          sx={{ color: 'primary.main', '&:hover': { color: 'primary.dark' }, transition: 'color 0.2s', textDecoration: 'none' }}
         >
           dev.yelee@gmail.com
-        </a>
-      </footer>
-    </div>
+        </Typography>
+      </Box>
+    </Box>
   )
 }

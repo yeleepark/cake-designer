@@ -1,6 +1,15 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
+import Box from '@mui/material/Box'
+import IconButton from '@mui/material/IconButton'
+import Popover from '@mui/material/Popover'
+import Slider from '@mui/material/Slider'
+import Divider from '@mui/material/Divider'
+import Typography from '@mui/material/Typography'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import ToggleButton from '@mui/material/ToggleButton'
+import CloseIcon from '@mui/icons-material/Close'
 import BrushIcon from '@mui/icons-material/Brush'
 import AutoFixNormalIcon from '@mui/icons-material/AutoFixNormal'
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill'
@@ -34,7 +43,6 @@ interface Props {
   onStampSizeChange: (size: number) => void
   onUndo?: () => void
   canUndo?: boolean
-  /** 모바일 하단 바에서 사용할 가로 배치 모드 */
   horizontal?: boolean
 }
 
@@ -59,6 +67,54 @@ const STAMP_TYPES: { value: StampType; label: React.ReactNode }[] = [
   { value: 'confetti', label: <CelebrationIcon sx={{ fontSize: 20 }} /> },
 ]
 
+/* ── 컬러 스와치 그리드 ── */
+function ColorSwatch({
+  selected,
+  onChange,
+}: {
+  selected: string
+  onChange: (color: string) => void
+}) {
+  return (
+    <>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0.75, mb: 1 }}>
+        {PRESET_COLORS.map((c) => (
+          <Box
+            key={c}
+            component="button"
+            onClick={() => onChange(c)}
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1,
+              border: 2,
+              borderColor: selected === c ? 'primary.main' : 'grey.300',
+              transform: selected === c ? 'scale(1.1)' : 'none',
+              transition: 'transform 0.15s',
+              backgroundColor: c,
+              cursor: 'pointer',
+              p: 0,
+              '&:hover': { transform: 'scale(1.1)' },
+            }}
+          />
+        ))}
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+        <Box
+          component="input"
+          type="color"
+          value={selected}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          sx={{ width: 32, height: 32, borderRadius: 1, cursor: 'pointer', border: 1, borderColor: 'grey.300', p: 0.25 }}
+        />
+        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>
+          {selected}
+        </Typography>
+      </Box>
+    </>
+  )
+}
+
 export default function Toolbar({
   value,
   onChange,
@@ -82,35 +138,10 @@ export default function Toolbar({
   canUndo,
   horizontal = false,
 }: Props) {
-  const [popupOpen, setPopupOpen] = useState(false)
-  const [baseColorPopupOpen, setBaseColorPopupOpen] = useState(false)
-  const popupRef = useRef<HTMLDivElement>(null)
+  const [popupAnchor, setPopupAnchor] = useState<HTMLElement | null>(null)
+  const [baseColorAnchor, setBaseColorAnchor] = useState<HTMLElement | null>(null)
   const anchorRef = useRef<HTMLButtonElement>(null)
   const baseColorAnchorRef = useRef<HTMLButtonElement>(null)
-  const baseColorPopupRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handler = (e: MouseEvent | TouchEvent) => {
-      if (
-        popupRef.current && !popupRef.current.contains(e.target as Node) &&
-        anchorRef.current && !anchorRef.current.contains(e.target as Node)
-      ) {
-        setPopupOpen(false)
-      }
-      if (
-        baseColorPopupRef.current && !baseColorPopupRef.current.contains(e.target as Node) &&
-        baseColorAnchorRef.current && !baseColorAnchorRef.current.contains(e.target as Node)
-      ) {
-        setBaseColorPopupOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    document.addEventListener('touchstart', handler)
-    return () => {
-      document.removeEventListener('mousedown', handler)
-      document.removeEventListener('touchstart', handler)
-    }
-  }, [])
 
   const vibrate = (ms = 10) => {
     try { navigator?.vibrate?.(ms) } catch {}
@@ -118,352 +149,242 @@ export default function Toolbar({
 
   const hasPopup = (t: Tool) => t === 'brush' || t === 'eraser' || t === 'line' || t === 'fill' || t === 'stamp'
 
-  const handleToolClick = (tool: Tool) => {
+  const handleToolClick = (tool: Tool, el: HTMLElement) => {
     vibrate()
     if (hasPopup(tool) && value === tool) {
-      setPopupOpen((o) => !o)
+      setPopupAnchor((prev) => prev ? null : el)
     } else {
       onChange(tool)
-      setPopupOpen(hasPopup(tool))
+      setPopupAnchor(hasPopup(tool) ? el : null)
     }
   }
 
-  const showPopup = popupOpen && hasPopup(value)
+  const showPopup = Boolean(popupAnchor) && hasPopup(value)
 
-  // 팝업 위치: 세로 모드는 오른쪽, 가로(모바일) 모드는 위쪽
-  const popupPositionClass = horizontal
-    ? 'fixed left-3 right-3 max-w-sm mx-auto z-[200] bg-white rounded-xl shadow-xl border border-gray-200 p-4'
-    : 'absolute left-full top-0 ml-2 z-50 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-56'
+  const toolBtnSx = (active: boolean) => ({
+    width: horizontal ? 48 : 40,
+    height: horizontal ? 48 : 40,
+    borderRadius: 3,
+    border: 1,
+    borderColor: active ? 'primary.main' : 'grey.300',
+    bgcolor: active ? 'action.selected' : 'background.paper',
+    color: active ? 'primary.main' : 'text.secondary',
+    '&:hover': { bgcolor: active ? 'action.selected' : 'grey.100', borderColor: active ? 'primary.main' : 'grey.400', color: active ? 'primary.main' : 'text.primary' },
+  })
 
-  const popupBottomStyle = horizontal
-    ? { bottom: 'calc(4.5rem + env(safe-area-inset-bottom, 0px))' }
-    : undefined
+  const colorDot = (color: string) => (
+    <Box
+      sx={{
+        position: 'absolute',
+        bottom: 4,
+        right: 4,
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        border: '1px solid white',
+        bgcolor: color,
+      }}
+    />
+  )
 
-  const btnClass = (active: boolean) =>
-    `relative flex items-center justify-center rounded-xl border transition-colors ${
-      horizontal ? 'w-12 h-12' : 'w-10 h-10'
-    } ${
-      active
-        ? 'border-violet-500 bg-violet-100 text-violet-700'
-        : 'border-transparent bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-    }`
+  const popupTitle =
+    value === 'brush' ? '브러쉬 설정' :
+    value === 'line' ? '직선 설정' :
+    value === 'fill' ? '채우기 색상' :
+    value === 'stamp' ? '스탬프 설정' :
+    '지우개 크기'
 
   return (
-    <div className={`relative ${horizontal ? 'flex flex-row items-center gap-1' : 'flex flex-col gap-1'}`}>
+    <Box sx={{ position: 'relative', display: 'flex', flexDirection: horizontal ? 'row' : 'column', alignItems: 'center', gap: 0.5 }}>
       {/* 라벨: 세로 모드에서만 */}
-      {!horizontal && <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">도구</p>}
+      {!horizontal && (
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 0.5 }}>
+          도구
+        </Typography>
+      )}
 
       {TOOLS.map((tool) => {
         const isActive = value === tool.value
-        const isAnchor = isActive && hasPopup(tool.value)
-
         return (
-          <button
+          <IconButton
             key={tool.value}
-            ref={isAnchor ? anchorRef : undefined}
+            ref={isActive && hasPopup(tool.value) ? anchorRef : undefined}
             title={tool.title}
-            onClick={() => handleToolClick(tool.value)}
-            className={btnClass(isActive)}
+            onClick={(e) => handleToolClick(tool.value, e.currentTarget)}
+            sx={toolBtnSx(isActive)}
           >
             {tool.icon}
-            {tool.value === 'brush' && (
-              <span
-                className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
-                style={{ backgroundColor: brushColor }}
-              />
-            )}
-            {tool.value === 'line' && (
-              <span
-                className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
-                style={{ backgroundColor: lineColor }}
-              />
-            )}
-            {tool.value === 'fill' && (
-              <span
-                className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
-                style={{ backgroundColor: fillColor }}
-              />
-            )}
-            {tool.value === 'stamp' && (
-              <span
-                className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
-                style={{ backgroundColor: stampColor }}
-              />
-            )}
-          </button>
+            {tool.value === 'brush' && colorDot(brushColor)}
+            {tool.value === 'line' && colorDot(lineColor)}
+            {tool.value === 'fill' && colorDot(fillColor)}
+            {tool.value === 'stamp' && colorDot(stampColor)}
+          </IconButton>
         )
       })}
 
-      {/* 구분선 */}
-      {horizontal
-        ? <div className="h-8 w-px bg-gray-200 mx-1" />
-        : <div className="my-2 border-t border-gray-200" />
-      }
+      <Divider orientation={horizontal ? 'vertical' : 'horizontal'} flexItem sx={horizontal ? { mx: 0.5, height: 32, alignSelf: 'center' } : { my: 1 }} />
 
       {/* 바탕색 라벨: 세로 모드에서만 */}
-      {!horizontal && <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">바탕</p>}
+      {!horizontal && (
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 0.5 }}>
+          바탕
+        </Typography>
+      )}
 
       {/* 바탕색 버튼 */}
-      <button
+      <IconButton
         ref={baseColorAnchorRef}
         title="바탕 색상"
-        onClick={() => setBaseColorPopupOpen((o) => !o)}
-        className={btnClass(baseColorPopupOpen)}
+        onClick={(e) => setBaseColorAnchor((prev) => prev ? null : e.currentTarget)}
+        sx={toolBtnSx(Boolean(baseColorAnchor))}
       >
         <FormatPaintIcon fontSize="small" />
-        <span
-          className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-white"
-          style={{ backgroundColor: baseColor }}
-        />
-      </button>
+        {colorDot(baseColor)}
+      </IconButton>
 
-      {/* 구분선 */}
-      {horizontal
-        ? <div className="h-8 w-px bg-gray-200 mx-1" />
-        : <div className="my-2 border-t border-gray-200" />
-      }
+      <Divider orientation={horizontal ? 'vertical' : 'horizontal'} flexItem sx={horizontal ? { mx: 0.5, height: 32, alignSelf: 'center' } : { my: 1 }} />
 
       {/* Undo 버튼 */}
-      <button
+      <IconButton
         title="실행 취소 (Undo)"
         onClick={onUndo}
         disabled={!canUndo}
-        className={`flex items-center justify-center rounded-xl border transition-colors ${
-          horizontal ? 'w-12 h-12' : 'w-10 h-10'
-        } ${
-          canUndo
-            ? 'border-transparent bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-            : 'border-transparent bg-white text-gray-300 cursor-not-allowed'
-        }`}
+        sx={{
+          width: horizontal ? 48 : 40,
+          height: horizontal ? 48 : 40,
+          borderRadius: 3,
+        }}
       >
         <UndoIcon fontSize="small" />
-      </button>
+      </IconButton>
 
       {/* 바탕색 팝업 */}
-      {baseColorPopupOpen && (
-        <div
-          ref={baseColorPopupRef}
-          className={popupPositionClass}
-          style={horizontal ? popupBottomStyle : { marginTop: '7rem' }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold text-gray-700">바탕 색상</p>
-            <button
-              onClick={() => setBaseColorPopupOpen(false)}
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+      <Popover
+        open={Boolean(baseColorAnchor)}
+        anchorEl={baseColorAnchor}
+        onClose={() => setBaseColorAnchor(null)}
+        anchorOrigin={{ vertical: horizontal ? 'top' : 'center', horizontal: horizontal ? 'center' : 'right' }}
+        transformOrigin={{ vertical: horizontal ? 'bottom' : 'center', horizontal: horizontal ? 'center' : 'left' }}
+        slotProps={{ paper: { sx: { p: 2, width: 224, borderRadius: 3 } } }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography variant="subtitle2">바탕 색상</Typography>
+          <IconButton size="small" onClick={() => setBaseColorAnchor(null)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <ColorSwatch selected={baseColor} onChange={onBaseColorChange} />
+      </Popover>
+
+      {/* 브러쉬/지우개/직선/채우기/스탬프 팝업 */}
+      <Popover
+        open={showPopup}
+        anchorEl={popupAnchor}
+        onClose={() => setPopupAnchor(null)}
+        anchorOrigin={{ vertical: horizontal ? 'top' : 'center', horizontal: horizontal ? 'center' : 'right' }}
+        transformOrigin={{ vertical: horizontal ? 'bottom' : 'center', horizontal: horizontal ? 'center' : 'left' }}
+        slotProps={{ paper: { sx: { p: 2, width: 224, borderRadius: 3 } } }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography variant="subtitle2">{popupTitle}</Typography>
+          <IconButton size="small" onClick={() => setPopupAnchor(null)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* 브러쉬 색상 */}
+        {value === 'brush' && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>색상</Typography>
+            <ColorSwatch selected={brushColor} onChange={onBrushColorChange} />
+          </Box>
+        )}
+
+        {/* 직선 색상 */}
+        {value === 'line' && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>색상</Typography>
+            <ColorSwatch selected={lineColor} onChange={onLineColorChange} />
+          </Box>
+        )}
+
+        {/* 채우기 색상 */}
+        {value === 'fill' && (
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>색상</Typography>
+            <ColorSwatch selected={fillColor} onChange={onFillColorChange} />
+          </Box>
+        )}
+
+        {/* 스탬프 설정 */}
+        {value === 'stamp' && (
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>모양</Typography>
+            <ToggleButtonGroup
+              exclusive
+              value={stampType}
+              onChange={(_, v) => v && onStampTypeChange(v)}
+              sx={{ mb: 2 }}
             >
-              ×
-            </button>
-          </div>
-          <div className="grid grid-cols-5 gap-1.5 mb-2">
-            {PRESET_COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => onBaseColorChange(c)}
-                className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
-                  baseColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
-                }`}
-                style={{ backgroundColor: c }}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <input
-              type="color"
-              value={baseColor}
-              onChange={(e) => onBaseColorChange(e.target.value)}
-              className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
+              {STAMP_TYPES.map((s) => (
+                <ToggleButton key={s.value} value={s.value} sx={{ width: 40, height: 40 }}>
+                  {s.label}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>색상</Typography>
+            <ColorSwatch selected={stampColor} onChange={onStampColorChange} />
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, mb: 1 }}>
+              <Typography variant="caption" color="text.secondary">크기</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>{stampSize}px</Typography>
+            </Box>
+            <Slider
+              value={stampSize}
+              onChange={(_, v) => onStampSizeChange(v as number)}
+              min={12}
+              max={60}
+              size="small"
             />
-            <span className="text-xs font-mono text-gray-500">{baseColor}</span>
-          </div>
-        </div>
-      )}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption" color="text.disabled">12</Typography>
+              <Typography variant="caption" color="text.disabled">60</Typography>
+            </Box>
+          </Box>
+        )}
 
-      {/* 브러쉬/지우개 팝업 */}
-      {showPopup && (
-        <div ref={popupRef} className={popupPositionClass} style={popupBottomStyle}>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold text-gray-700">
-              {value === 'brush' ? '브러쉬 설정' : value === 'line' ? '직선 설정' : value === 'fill' ? '채우기 색상' : value === 'stamp' ? '스탬프 설정' : '지우개 크기'}
-            </p>
-            <button
-              onClick={() => setPopupOpen(false)}
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-            >
-              ×
-            </button>
-          </div>
-
-          {value === 'brush' && (
-            <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-2">색상</p>
-              <div className="grid grid-cols-5 gap-1.5 mb-2">
-                {PRESET_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => onBrushColorChange(c)}
-                    className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
-                      brushColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="color"
-                  value={brushColor}
-                  onChange={(e) => onBrushColorChange(e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
-                />
-                <span className="text-xs font-mono text-gray-500">{brushColor}</span>
-              </div>
-            </div>
-          )}
-
-          {value === 'line' && (
-            <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-2">색상</p>
-              <div className="grid grid-cols-5 gap-1.5 mb-2">
-                {PRESET_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => onLineColorChange(c)}
-                    className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
-                      lineColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="color"
-                  value={lineColor}
-                  onChange={(e) => onLineColorChange(e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
-                />
-                <span className="text-xs font-mono text-gray-500">{lineColor}</span>
-              </div>
-            </div>
-          )}
-
-          {value === 'fill' && (
-            <div>
-              <p className="text-xs text-gray-500 mb-2">색상</p>
-              <div className="grid grid-cols-5 gap-1.5 mb-2">
-                {PRESET_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => onFillColorChange(c)}
-                    className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
-                      fillColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="color"
-                  value={fillColor}
-                  onChange={(e) => onFillColorChange(e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
-                />
-                <span className="text-xs font-mono text-gray-500">{fillColor}</span>
-              </div>
-            </div>
-          )}
-
-          {value === 'stamp' && (
-            <div>
-              <p className="text-xs text-gray-500 mb-2">모양</p>
-              <div className="flex gap-2 mb-4">
-                {STAMP_TYPES.map((s) => (
-                  <button
-                    key={s.value}
-                    onClick={() => onStampTypeChange(s.value)}
-                    className={`w-10 h-10 rounded-lg border-2 text-lg flex items-center justify-center transition-transform hover:scale-110 ${
-                      stampType === s.value ? 'border-violet-500 bg-violet-50 scale-110' : 'border-gray-200 bg-white'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mb-2">색상</p>
-              <div className="grid grid-cols-5 gap-1.5 mb-2">
-                {PRESET_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => onStampColorChange(c)}
-                    className={`w-8 h-8 rounded-md border-2 transition-transform hover:scale-110 ${
-                      stampColor === c ? 'border-violet-500 scale-110' : 'border-gray-200'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2 mt-1 mb-4">
-                <input
-                  type="color"
-                  value={stampColor}
-                  onChange={(e) => onStampColorChange(e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer border border-gray-200 p-0.5"
-                />
-                <span className="text-xs font-mono text-gray-500">{stampColor}</span>
-              </div>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-gray-500">크기</p>
-                <span className="text-xs font-semibold text-violet-600">{stampSize}px</span>
-              </div>
-              <input
-                type="range"
-                min={12}
-                max={60}
-                value={stampSize}
-                onChange={(e) => onStampSizeChange(Number(e.target.value))}
-                className="w-full accent-violet-500"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>12</span>
-                <span>60</span>
-              </div>
-            </div>
-          )}
-
-          {(value === 'brush' || value === 'line' || value === 'eraser') && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-gray-500">크기</p>
-              <span className="text-xs font-semibold text-violet-600">{size}px</span>
-            </div>
-            <div className="flex items-center justify-center mb-2 bg-gray-50 rounded-lg" style={{ height: 68 }}>
-              <div
-                className="rounded-full"
-                style={{
+        {/* 브러쉬/직선/지우개 크기 */}
+        {(value === 'brush' || value === 'line' || value === 'eraser') && (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="caption" color="text.secondary">크기</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>{size}px</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 68, bgcolor: 'grey.50', borderRadius: 2, mb: 1 }}>
+              <Box
+                sx={{
                   width: size,
                   height: size,
-                  backgroundColor: value === 'brush' ? brushColor : value === 'line' ? lineColor : '#6b7280',
+                  borderRadius: '50%',
+                  bgcolor: value === 'brush' ? brushColor : value === 'line' ? lineColor : 'grey.500',
                 }}
               />
-            </div>
-            <input
-              type="range"
+            </Box>
+            <Slider
+              value={size}
+              onChange={(_, v) => onSizeChange(v as number)}
               min={1}
               max={60}
-              value={size}
-              onChange={(e) => onSizeChange(Number(e.target.value))}
-              className="w-full accent-violet-500"
+              size="small"
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
-              <span>1</span>
-              <span>60</span>
-            </div>
-          </div>
-          )}
-        </div>
-      )}
-    </div>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption" color="text.disabled">1</Typography>
+              <Typography variant="caption" color="text.disabled">60</Typography>
+            </Box>
+          </Box>
+        )}
+      </Popover>
+    </Box>
   )
 }

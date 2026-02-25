@@ -6,6 +6,9 @@ import { OrbitControls, Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import type Konva from 'konva'
 import type { CakeShape } from '@/types/cake'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Fade from '@mui/material/Fade'
 
 const TOP_CANVAS_SIZE = 300
 const TOP_RADIUS = 130
@@ -25,7 +28,6 @@ function cropTopCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasEleme
   ctx.imageSmoothingQuality = 'high'
   ctx.fillStyle = bgColor
   ctx.fillRect(0, 0, outW, outH)
-  // src(300x300)에서 crop 영역(offset~offset+cropSize)을 outW×outH로 확대
   ctx.drawImage(src, CROP_OFFSET, CROP_OFFSET, CROP_SIZE, CROP_SIZE, 0, 0, outW, outH)
   return out
 }
@@ -45,7 +47,6 @@ function prepSideCanvas(src: HTMLCanvasElement, bgColor: string): HTMLCanvasElem
   return out
 }
 
-/** 텍스처 품질 설정 — 업스케일된 텍스처에 밉맵+트리리니어 필터 적용 */
 function applyTextureSettings(tex: THREE.CanvasTexture, anisotropy: number) {
   tex.colorSpace = THREE.SRGBColorSpace
   tex.generateMipmaps = true
@@ -76,7 +77,6 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
     const sideStage = sideRef.current
     if (!topStage || !sideStage) return
 
-    // 윗면 텍스처
     const croppedTop = cropTopCanvas(topStage.toCanvas(), baseColor)
     if (topTexRef.current) {
       topTexRef.current.image = croppedTop
@@ -88,7 +88,6 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
       setTopTex(tex)
     }
 
-    // 옆면 텍스처
     const preparedSide = prepSideCanvas(sideStage.toCanvas(), baseColor)
     if (sideTexRef.current) {
       sideTexRef.current.image = preparedSide
@@ -119,30 +118,22 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
         </mesh>
       )}
 
-      {/* 윗면: z-fighting 방지를 위해 0.003 위로 올림, meshBasicMaterial로 조명 영향 제거 */}
       {cakeShape === 'circle' && (
         <mesh position={[0, height / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[radius, 64]} />
-          <meshBasicMaterial
-            map={topTex ?? undefined}
-            color={topTex ? undefined : baseColor}
-          />
+          <meshBasicMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} />
         </mesh>
       )}
       {cakeShape === 'square' && (
         <mesh position={[0, height / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[radius * 1.8, radius * 1.8]} />
-          <meshBasicMaterial
-            map={topTex ?? undefined}
-            color={topTex ? undefined : baseColor}
-          />
+          <meshBasicMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} />
         </mesh>
       )}
     </group>
   )
 }
 
-/** Three.js gl.domElement을 canvasRef에 연결하는 내부 컴포넌트 */
 function CanvasCapture({ canvasRef }: { canvasRef: RefObject<HTMLCanvasElement | null> }) {
   const { gl } = useThree()
   useEffect(() => {
@@ -175,25 +166,33 @@ function InteractionHint() {
     return () => clearTimeout(timer)
   }, [visible])
 
-  if (!visible) return null
+  const dismiss = () => {
+    setVisible(false)
+    localStorage.setItem('cake3d-hint-seen', '1')
+  }
 
   return (
-    <div
-      className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 rounded-xl transition-opacity duration-500"
-      onClick={() => {
-        setVisible(false)
-        localStorage.setItem('cake3d-hint-seen', '1')
-      }}
-      onTouchStart={() => {
-        setVisible(false)
-        localStorage.setItem('cake3d-hint-seen', '1')
-      }}
-    >
-      <div className="text-center text-white px-4 py-3 rounded-xl bg-black/50 backdrop-blur-sm">
-        <p className="text-sm font-semibold mb-1">드래그로 회전 / 핀치로 확대</p>
-        <p className="text-xs opacity-80">탭하여 닫기</p>
-      </div>
-    </div>
+    <Fade in={visible} timeout={500}>
+      <Box
+        onClick={dismiss}
+        onTouchStart={dismiss}
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'rgba(0,0,0,0.3)',
+          borderRadius: 3,
+        }}
+      >
+        <Box sx={{ textAlign: 'center', color: 'white', px: 2, py: 1.5, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>드래그로 회전 / 핀치로 확대</Typography>
+          <Typography variant="caption" sx={{ opacity: 0.8 }}>탭하여 닫기</Typography>
+        </Box>
+      </Box>
+    </Fade>
   )
 }
 
@@ -205,7 +204,7 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
   const shadowSize = isMobile ? 1024 : 2048
 
   return (
-    <div className="relative w-full h-full min-h-[400px]">
+    <Box sx={{ position: 'relative', width: '100%', height: '100%', minHeight: 400 }}>
       <InteractionHint />
       <Canvas
         dpr={[1, maxDpr]}
@@ -216,7 +215,7 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
           antialias: true,
           powerPreference: 'high-performance',
           precision: 'highp',
-          preserveDrawingBuffer: true, // toDataURL() 캡처를 위해 필수
+          preserveDrawingBuffer: true,
         }}
       >
         <CanvasCapture canvasRef={canvasRef} />
@@ -256,6 +255,6 @@ export default function CakePreview3D({ topRef, sideRef, cakeShape, updateTick, 
         />
         <Environment preset="city" />
       </Canvas>
-    </div>
+    </Box>
   )
 }
