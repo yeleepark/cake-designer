@@ -1,6 +1,6 @@
 export type Tool = 'brush' | 'eraser' | 'fill' | 'line' | 'stamp'
 
-export type CakeShape = 'circle' | 'square'
+export type CakeShape = 'circle' | 'square' | 'heart'
 
 export type StampType = 'heart' | 'star' | 'confetti'
 

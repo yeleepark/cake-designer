@@ -5,6 +5,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import ToggleButton from '@mui/material/ToggleButton'
 import CircleIcon from '@mui/icons-material/Circle'
 import CropSquareIcon from '@mui/icons-material/CropSquare'
+import FavoriteIcon from '@mui/icons-material/Favorite'
 
 interface Props {
   value: CakeShape
@@ -15,6 +16,7 @@ interface Props {
 const SHAPES: { value: CakeShape; label: string; icon: React.ReactNode }[] = [
   { value: 'circle', label: '원형', icon: <CircleIcon sx={{ fontSize: 20 }} /> },
   { value: 'square', label: '사각형', icon: <CropSquareIcon sx={{ fontSize: 20 }} /> },
+  { value: 'heart', label: '하트', icon: <FavoriteIcon sx={{ fontSize: 20 }} /> },
 ]
 
 export default function CakeShapeSelector({ value, onChange, compact = false }: Props) {

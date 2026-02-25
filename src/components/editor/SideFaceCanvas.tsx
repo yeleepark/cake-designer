@@ -29,7 +29,7 @@ const RADIUS = 130
 const CIRCUMFERENCE = Math.round(2 * Math.PI * RADIUS) // ~817px
 
 function getSideWidth(shape: CakeShape) {
-  if (shape === 'circle') return Math.min(CIRCUMFERENCE, 600)
+  if (shape === 'circle' || shape === 'heart') return Math.min(CIRCUMFERENCE, 600)
   return Math.min(RADIUS * 2 * 4, 600)
 }
 
@@ -224,7 +224,7 @@ export default function SideFaceCanvas({
   return (
     <Stack alignItems="center">
       <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
-        옆면 전개도 {cakeShape === 'circle' ? '(원주 펼침)' : '(4면 전개도)'}
+        옆면 전개도 {cakeShape === 'circle' ? '(원주 펼침)' : cakeShape === 'square' ? '(4면 전개도)' : '(하트 둘레)'}
       </Typography>
       <div style={{ width: CANVAS_W * scale, height: CAKE_HEIGHT * scale }}>
       <Paper

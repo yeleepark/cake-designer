@@ -49,6 +49,13 @@ function getClipFunc(shape: CakeShape) {
     ctx.beginPath()
     if (shape === 'circle') {
       ctx.arc(cx, cy, RADIUS, 0, Math.PI * 2)
+    } else if (shape === 'heart') {
+      const s = RADIUS
+      ctx.moveTo(cx, cy + s)
+      ctx.bezierCurveTo(cx - s * 0.2, cy + s * 0.8, cx - s, cy + s * 0.2, cx - s, cy - s * 0.2)
+      ctx.bezierCurveTo(cx - s, cy - s * 0.7, cx - s * 0.5, cy - s, cx, cy - s * 0.6)
+      ctx.bezierCurveTo(cx + s * 0.5, cy - s, cx + s, cy - s * 0.7, cx + s, cy - s * 0.2)
+      ctx.bezierCurveTo(cx + s, cy + s * 0.2, cx + s * 0.2, cy + s * 0.8, cx, cy + s)
     } else {
       ctx.rect(cx - RADIUS, cy - RADIUS, RADIUS * 2, RADIUS * 2)
     }
@@ -441,7 +448,7 @@ export default function TopFaceCanvas({
   return (
     <Stack alignItems="center">
       <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1, mb: 1 }}>
-        윗면 {cakeShape === 'circle' ? '(원형)' : '(사각형)'}
+        윗면 {cakeShape === 'circle' ? '(원형)' : cakeShape === 'square' ? '(사각형)' : '(하트)'}
       </Typography>
       <div
         style={{
@@ -527,18 +534,48 @@ export default function TopFaceCanvas({
 
         </Stage>
         {/* 케이크 모양 테두리 — CSS 오버레이 (텍스처 캡처에서 제외) */}
-        <div
-          style={{
-            position: 'absolute',
-            left: CANVAS_SIZE / 2 - RADIUS,
-            top: CANVAS_SIZE / 2 - RADIUS,
-            width: RADIUS * 2,
-            height: RADIUS * 2,
-            borderRadius: cakeShape === 'circle' ? '50%' : 0,
-            border: '1.5px solid #d4c8b4',
-            pointerEvents: 'none',
-          }}
-        />
+        {cakeShape === 'heart' ? (
+          <svg
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: CANVAS_SIZE,
+              height: CANVAS_SIZE,
+              pointerEvents: 'none',
+            }}
+            viewBox={`0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}`}
+          >
+            <path
+              d={(() => {
+                const cx = CANVAS_SIZE / 2
+                const cy = CANVAS_SIZE / 2
+                const s = RADIUS
+                return `M ${cx} ${cy + s}
+                  C ${cx - s * 0.2} ${cy + s * 0.8}, ${cx - s} ${cy + s * 0.2}, ${cx - s} ${cy - s * 0.2}
+                  C ${cx - s} ${cy - s * 0.7}, ${cx - s * 0.5} ${cy - s}, ${cx} ${cy - s * 0.6}
+                  C ${cx + s * 0.5} ${cy - s}, ${cx + s} ${cy - s * 0.7}, ${cx + s} ${cy - s * 0.2}
+                  C ${cx + s} ${cy + s * 0.2}, ${cx + s * 0.2} ${cy + s * 0.8}, ${cx} ${cy + s} Z`
+              })()}
+              fill="none"
+              stroke="#d4c8b4"
+              strokeWidth={1.5}
+            />
+          </svg>
+        ) : (
+          <div
+            style={{
+              position: 'absolute',
+              left: CANVAS_SIZE / 2 - RADIUS,
+              top: CANVAS_SIZE / 2 - RADIUS,
+              width: RADIUS * 2,
+              height: RADIUS * 2,
+              borderRadius: cakeShape === 'circle' ? '50%' : 0,
+              border: '1.5px solid #d4c8b4',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
         {/* 브러쉬/지우개 커서 — Konva 외부 CSS 오버레이 */}
         {cursor && (tool === 'brush' || tool === 'eraser') && (
           <div

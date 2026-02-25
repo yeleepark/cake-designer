@@ -103,6 +103,42 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
   const radius = 1.5
   const height = 1.0
 
+  const heartGeos = (() => {
+    if (cakeShape !== 'heart') return null
+    const s = radius
+
+    // Body shape (canvas Y convention: tip at +y)
+    const bodyShape = new THREE.Shape()
+    bodyShape.moveTo(0, s)
+    bodyShape.bezierCurveTo(-s * 0.2, s * 0.8, -s, s * 0.2, -s, -s * 0.2)
+    bodyShape.bezierCurveTo(-s, -s * 0.7, -s * 0.5, -s, 0, -s * 0.6)
+    bodyShape.bezierCurveTo(s * 0.5, -s, s, -s * 0.7, s, -s * 0.2)
+    bodyShape.bezierCurveTo(s, s * 0.2, s * 0.2, s * 0.8, 0, s)
+
+    // Top face shape (Y flipped so tip faces camera after rotation)
+    const topShape = new THREE.Shape()
+    topShape.moveTo(0, -s)
+    topShape.bezierCurveTo(-s * 0.2, -s * 0.8, -s, -s * 0.2, -s, s * 0.2)
+    topShape.bezierCurveTo(-s, s * 0.7, -s * 0.5, s, 0, s * 0.6)
+    topShape.bezierCurveTo(s * 0.5, s, s, s * 0.7, s, s * 0.2)
+    topShape.bezierCurveTo(s, -s * 0.2, s * 0.2, -s * 0.8, 0, -s)
+
+    const extrudeGeo = new THREE.ExtrudeGeometry(bodyShape, { depth: height, bevelEnabled: false, curveSegments: 64 })
+
+    const topGeo = new THREE.ShapeGeometry(topShape, 64)
+    // Fix UVs: map to square region matching the square texture crop
+    const positions = topGeo.getAttribute('position')
+    const uvAttr = topGeo.getAttribute('uv')
+    for (let i = 0; i < uvAttr.count; i++) {
+      const x = positions.getX(i)
+      const y = positions.getY(i)
+      uvAttr.setXY(i, (x + s) / (2 * s), (y + s) / (2 * s))
+    }
+    uvAttr.needsUpdate = true
+
+    return { extrudeGeo, topGeo }
+  })()
+
   return (
     <group>
       {cakeShape === 'circle' && (
@@ -117,6 +153,11 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
           <meshStandardMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
         </mesh>
       )}
+      {cakeShape === 'heart' && heartGeos && (
+        <mesh castShadow geometry={heartGeos.extrudeGeo} rotation={[Math.PI / 2, 0, 0]} position={[0, height / 2, 0]}>
+          <meshStandardMaterial map={sideTex ?? undefined} color={sideTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
+        </mesh>
+      )}
 
       {cakeShape === 'circle' && (
         <mesh position={[0, height / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -127,6 +168,11 @@ function CakeGroup({ topRef, sideRef, cakeShape, updateTick, baseColor }: CakeGr
       {cakeShape === 'square' && (
         <mesh position={[0, height / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[radius * 1.8, radius * 1.8]} />
+          <meshStandardMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
+        </mesh>
+      )}
+      {cakeShape === 'heart' && heartGeos && (
+        <mesh geometry={heartGeos.topGeo} position={[0, height / 2 + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <meshStandardMaterial map={topTex ?? undefined} color={topTex ? undefined : baseColor} roughness={0.8} metalness={0.0} />
         </mesh>
       )}
