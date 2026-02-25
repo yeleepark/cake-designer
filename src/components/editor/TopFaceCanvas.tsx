@@ -526,7 +526,7 @@ export default function TopFaceCanvas({
           </Layer>
 
         </Stage>
-        {/* 원형 테두리 — CSS 오버레이 (텍스처 캡처에서 제외) */}
+        {/* 케이크 모양 테두리 — CSS 오버레이 (텍스처 캡처에서 제외) */}
         <div
           style={{
             position: 'absolute',
@@ -534,7 +534,7 @@ export default function TopFaceCanvas({
             top: CANVAS_SIZE / 2 - RADIUS,
             width: RADIUS * 2,
             height: RADIUS * 2,
-            borderRadius: '50%',
+            borderRadius: cakeShape === 'circle' ? '50%' : 0,
             border: '1.5px solid #d4c8b4',
             pointerEvents: 'none',
           }}
